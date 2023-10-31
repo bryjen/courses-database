@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "include", "include\include.csproj", "{A07D5905-1812-4B8C-9396-B802968F49E7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "courses-database-consoleapp", "courses-database-consoleapp\courses-database-consoleapp.csproj", "{51BA948C-3EF4-4D25-A6CB-E4CDF13EB4B7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A07D5905-1812-4B8C-9396-B802968F49E7} = {A07D5905-1812-4B8C-9396-B802968F49E7}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A07D5905-1812-4B8C-9396-B802968F49E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A07D5905-1812-4B8C-9396-B802968F49E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A07D5905-1812-4B8C-9396-B802968F49E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A07D5905-1812-4B8C-9396-B802968F49E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51BA948C-3EF4-4D25-A6CB-E4CDF13EB4B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51BA948C-3EF4-4D25-A6CB-E4CDF13EB4B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51BA948C-3EF4-4D25-A6CB-E4CDF13EB4B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51BA948C-3EF4-4D25-A6CB-E4CDF13EB4B7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
