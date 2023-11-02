@@ -88,8 +88,15 @@ ScaffoldingReadMe.txt
 *.DotSettings
 *.DotSettings.user
 
-# Project directories
+# Project directories/files
+Courses/bin
+Courses/obj
+Courses/config.yaml
+
 courses-database-consoleapp/bin
 courses-database-consoleapp/obj
-include/bin
-include/obj
+
+CoursesTests/bin
+CoursesTests/obj
+
+output/
