@@ -1,4 +1,4 @@
-﻿using Courses.WebScraping.Concordia;
+﻿using UniversityDatabase.Data.Web.Concordia;
 
 namespace CoursesTests.WebScrapingTests;
 

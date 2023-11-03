@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <Configurations>Debug;Release;Test;Another</Configurations>
         <Platforms>AnyCPU</Platforms>
+        <RootNamespace>UniversityDatabase</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -27,6 +28,9 @@
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
       <None Update="WebScraping\Concordia\concordia_urls.yaml">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Data\Web\Concordia\concordia_urls.yaml">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>

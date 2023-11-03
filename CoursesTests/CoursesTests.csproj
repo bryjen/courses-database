@@ -26,7 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Courses\Courses.csproj" />
+      <ProjectReference Include="..\UniversityDatabase\UniversityDatabase.csproj" />
     </ItemGroup>
 
 </Project>

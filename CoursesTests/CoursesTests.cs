@@ -1,4 +1,4 @@
-﻿using Courses;
+﻿using UniversityDatabase.Core;
 
 namespace CoursesTests;
 
@@ -12,11 +12,8 @@ public class CoursesTests
     [SetUp]
     public void SetUp()
     {
-        using (var context = new CourseDataDbContext())
-        {
-            var allCourses = context.Courses.ToList();
-            allCourses.ForEach(Console.WriteLine);
-        }
+        List<Course> courses = Course.GetCourses();
+        courses.ForEach(Console.WriteLine);
     }
 
     [Test]

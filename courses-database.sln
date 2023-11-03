@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "courses-database-consoleapp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoursesTests", "CoursesTests\CoursesTests.csproj", "{34F8372F-CDB2-4AB7-BFC5-28E0B5EF38A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Courses", "Courses\Courses.csproj", "{5E5D5181-5CE5-436E-AEA8-0CEE6988F881}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniversityDatabase", "UniversityDatabase\UniversityDatabase.csproj", "{5E5D5181-5CE5-436E-AEA8-0CEE6988F881}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

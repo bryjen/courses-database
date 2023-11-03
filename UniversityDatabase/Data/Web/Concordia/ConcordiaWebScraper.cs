@@ -1,21 +1,21 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
+using UniversityDatabase.Core;
 using YamlDotNet.Serialization;
 
-
-namespace Courses.WebScraping.Concordia;
+namespace UniversityDatabase.Data.Web.Concordia;
 
 public class ConcordiaWebScraper : WebScraper
 {
     public void Execute()
     {
         //  Obtaining the list of urls from the 'concordia_urls.yaml' file
-        var yaml = File.ReadAllText("WebScraping/Concordia/concordia_urls.yaml");
+        var yaml = File.ReadAllText("Data/Web/Concordia/concordia_urls.yaml");
         var deserializer = new DeserializerBuilder().Build();
         var urls = deserializer.Deserialize<UrlList>(yaml);
         
-        foreach (var url in urls.Urls.GetRange(54, 1))
+        foreach (var url in urls.Urls.GetRange(54, 5))
         {
             //  Declaring classes that interact w/ concordia course website
             using IWebDriver driver = new ChromeDriver();
@@ -44,5 +44,30 @@ public class ConcordiaWebScraper : WebScraper
                 Console.WriteLine(result.Text + "\n");
             }
         }
+    }
+
+    public override List<string> ScrapeAll()
+    {
+        var accumulationList = new List<string>();
+        foreach (var url in Urls)
+        {
+            accumulationList.AddRange(ScrapeWebsite(url));
+        }
+
+        return accumulationList;
+    }
+
+    protected override List<string> ScrapeWebsite(string url)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected override List<Course> TransformToCourses(List<string> rawStringData)
+    {
+        throw new NotImplementedException();
+    }
+
+    public ConcordiaWebScraper() : base("Data/Web/Concordia/concordia_urls.yaml")
+    {
     }
 }
