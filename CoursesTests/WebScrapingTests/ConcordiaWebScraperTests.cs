@@ -1,4 +1,6 @@
-﻿using UniversityDatabase.Data.Web.Concordia;
+﻿using System.Diagnostics;
+using UniversityDatabase.Data.Web;
+using UniversityDatabase.Data.Web.Concordia;
 
 namespace CoursesTests.WebScrapingTests;
 
@@ -18,8 +20,14 @@ public class ConcordiaWebScraperTests
     [Test]
     public void PrintContents()
     {
-        ConcordiaWebScraper cws = new ConcordiaWebScraper();
-        cws.Execute();
+        WebScraper cws = new ConcordiaWebScraper();
+        var rawData = cws.ScrapeAll(52, 2);
+        // var rawData = cws.ScrapeAll(52, 2);
+        // rawData.ForEach(data => Console.WriteLine(data + "\n"));
+
+        cws.TransformToCourse(rawData[0]);
+        //var courses = rawData.Select(str => cws.TransformToCourse(str)).ToList();
+
         Assert.Pass();
     }
 }

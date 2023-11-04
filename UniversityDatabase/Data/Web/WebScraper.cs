@@ -1,8 +1,10 @@
-﻿using UniversityDatabase.Core;
+﻿using System.Diagnostics.CodeAnalysis;
+using UniversityDatabase.Core;
 using YamlDotNet.Serialization;
 
 namespace UniversityDatabase.Data.Web;
 
+//  TODO: update this documentation when class is finished
 /// <summary>
 ///     <para>
 ///         An instance of this class represents an object that web-scrapes a university's website(s) for data about the
@@ -72,7 +74,11 @@ namespace UniversityDatabase.Data.Web;
 /// </example>
 public abstract class WebScraper
 {
+    /// <summary> The number of attempts when trying to scrape a particular url. </summary>
+    protected const uint MaximumAttempts = 3;
+    
     /// <summary> The list of urls to be web-scraped. </summary>
+    // ReSharper disable once MemberCanBePrivate.Global
     protected List<string> Urls { get; private set; }
 
     /// <summary>
@@ -94,7 +100,7 @@ public abstract class WebScraper
         var deserializer = new Deserializer();
         Urls = deserializer.Deserialize<UrlList>(rawYaml).Urls;
     }
-    
+
     /// <summary>
     ///     Web-scrapes each url in the list, and returns a list of <b>RAW</b> string text data from every course
     ///     identified. 
@@ -102,39 +108,62 @@ public abstract class WebScraper
     /// <returns>
     ///     A list of string data. Each string is raw unprocessed data that can be converted to a <c>Course</c> object.
     /// </returns>
-    /// <remarks>
-    ///     <para>
-    ///         This method is meant to be used in conjunction with <see cref="TransformToCourses"/> to obtain a list
-    ///         of <c>Course</c> objects.
-    ///     </para>
-    /// </remarks>
-    public abstract List<string> ScrapeAll();
+    /// <seealso cref="TransformToCourses"/>
+    public List<string> ScrapeAll()
+    {
+        return Scrape(Urls);
+    }
 
     /// <summary>
-    /// 
+    ///     Web-scrapes a subset of urls in the list, and returns a list of  <b>RAW</b> string text data from every
+    ///     course identified.
     /// </summary>
-    /// <param name="url"></param>
-    /// <returns></returns>
-    protected abstract List<string> ScrapeWebsite(string url);
-
-    /// <summary>
-    ///     Transforms a list of strings into a list of <c>Course</c> objects. Each string must be a representation of a
-    ///     course, and each string must be consistent with one another.
-    /// </summary>
-    /// <param name="rawStrings">
-    ///     A list of raw strings to be converted into <c>Course</c> objects.
-    /// </param>
+    /// <param name="indexStart"> The zero-based List&lt;T&gt; index at which the range starts. </param>
+    /// <param name="number"> The number of elements in the range. </param>
     /// <returns>
-    ///     A list of <c>Course</c> objects.
+    ///     A list of string data. Each string is raw unprocessed data that can be converted to a <c>Course</c> object.
     /// </returns>
-    protected abstract List<Course> TransformToCourses(List<string> rawStrings);
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     If index is less than 0, or count is less than 0.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    ///     Index and count do not denote a valid range of elements in the List&lt;T&gt;.
+    /// </exception>
+    /// <seealso cref="TransformToCourses"/>
+    public List<string> ScrapeAll(int indexStart, int number)
+    {
+        return Scrape(Urls.GetRange(indexStart, number));
+    }
 
+    /// <summary>
+    ///     Web-scrapes a passed list, and returns a list of <b>RAW</b> string text data from every course identified.
+    /// </summary>
+    /// <param name="urls"> A list of urls to be web-scraped. </param>
+    /// <returns>
+    ///     A list of string data. Each string is raw unprocessed data that can be converted to a <c>Course</c> object.
+    /// </returns>
+    /// <seealso cref="TransformToCourses"/>
+    protected abstract List<string> Scrape(List<string> urls);
+
+    /// <summary>
+    ///     Scrapes a specific url. Returns a list of <b>RAW</b> string text data from every course identified.
+    /// </summary>
+    /// <param name="url"> The url of the website to scrape </param>
+    /// <returns>
+    ///     A list of string data. Each string is raw unprocessed data that can be converted to a <c>Course</c> object.
+    /// </returns>
+    /// <seealso cref="TransformToCourses"/>
+    protected abstract List<string> ScrapeWebsite(string url);
     
     
+    public abstract Course TransformToCourse(string rawString);
+
     /// <summary>
     ///     A helper class stores a list of urls to be web-scraped.
     /// </summary>
-    protected abstract class UrlList
+    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+    [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
+    internal sealed class UrlList
     {
         public List<string> Urls { get; set; } = new List<string>();
     }

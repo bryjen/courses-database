@@ -4,7 +4,7 @@
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Configurations>Debug;Release;Test;Another</Configurations>
+        <Configurations>Another;Debug</Configurations>
         <Platforms>AnyCPU</Platforms>
         <RootNamespace>UniversityDatabase</RootNamespace>
     </PropertyGroup>
