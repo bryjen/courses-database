@@ -1,0 +1,6 @@
+#  Configuration file containing vital, but sensitive, data for input/output, APIs, databases, etc.
+#  Relase program will come with the intended values.
+#  When forking/cloning the repo, use temporary values or disable respective functionalities by un-defining symbols in the .csproj file
+DbConnectionString: ""
+OutputDirectory: ""
+OpenAiApiKey: ""
