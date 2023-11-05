@@ -12,7 +12,7 @@
 
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
-        <Configurations>Another;Debug</Configurations>
+        <Configurations>Another;Debug;Release</Configurations>
         <Platforms>AnyCPU</Platforms>
         <DefineConstants>TEST_WEBSCRAPING;TEST_CONNECTION</DefineConstants>
     </PropertyGroup>

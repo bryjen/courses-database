@@ -7,7 +7,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Windows</DockerDefaultTargetOS>
-        <Configurations>Another;Debug</Configurations>
+        <Configurations>Another;Debug;Release</Configurations>
         <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 

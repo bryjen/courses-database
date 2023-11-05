@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using UniversityDatabase.Data.Database;
 
@@ -17,15 +19,21 @@ namespace UniversityDatabase.Core;
 /// <seealso cref="DatabaseDataLoader"/>>
 [Keyless]
 [Table("courses")]
-public class Course
+[SuppressMessage("ReSharper", "CollectionNeverQueried.Global")]
+[SuppressMessage("ReSharper", "InconsistentNaming")]
+public abstract class Course
 {
-    private string? _description = "NA";
-    
-    private string? _components = "NA";
-    
-    private string? _notes = "NA";
+    //  Backing fields
+    protected string? _description = null;
+    protected string? _components = null;
+    protected string? _instructors = null;
+    protected string? _notes = null;
+    protected string? _termsOffered = null;
 
-    /// <summary> The type/department of the course. </summary>
+    /// <summary> Id of the university in which the course belongs to. </summary>
+    [Column("university-id")]
+    public int UniversityId { get; internal set; } = 0;
+    
     [Column("type")]
     public string Type { get; internal set; } = "NA";
     
@@ -42,7 +50,7 @@ public class Course
     public string? Description
     {
         get =>          _description ?? "NA";
-        internal set => _description = value!;
+        internal set => _description = value;
     }
 
     /// <summary> The corresponding components of the course. ex. Lecture/Lab/Tutorial ... </summary>
@@ -50,7 +58,15 @@ public class Course
     public string? Components
     {
         get =>          _components ?? "NA";
-        internal set => _components = value!;
+        internal set => _components = value;
+    }
+
+    /// <summary> The main instructor/professor of the course. </summary>
+    [Column("instructors")]
+    public string? Instructors
+    {
+        get =>          _instructors ?? "NA";
+        internal set => _instructors = value;
     }
 
     /// <summary> Any other notable information about the course. </summary>
@@ -60,13 +76,22 @@ public class Course
         get =>          _notes ?? "NA";
         internal set => _notes = value!;
     }
-    
+
+    /// <summary>
+    ///     The terms where the course can be taken/is offered. A 'null' value indicates it can be taken in any term.
+    /// </summary>
+    [Column("terms-offered")]
+    public string? TermsOffered
+    {
+        get =>          _termsOffered ?? "NA";
+        internal set => _termsOffered = value;
+    }
+
     /// <summary> How many semesters the course is spread over. </summary>
     [Column("duration")]
-    public int Duration { get; internal set; }
+    public int Duration { get; internal set; } = 1; 
 
     /// <summary> A list of prerequisite courses in string format. </summary>
-    // ReSharper disable once MemberCanBePrivate.Global, CollectionNeverQueried.Global
     public List<string> Prerequisites { get; } = new List<string>();
     
     /// <summary> Initializes the <see cref="Prerequisites"/> attribute. </summary>
@@ -112,9 +137,29 @@ public class Course
         var dataLoader = new DatabaseDataLoader();
         return dataLoader.Courses;
     }
-    
-    
-    
+
+
+    public string AsSqlEntry()
+    {
+        var forDescription = _description is null ? "NULL" : $"'{Regex.Replace(_description, @"'", "")}'";
+        var forComponents = _components is null ? "NULL" : $"'{Regex.Replace(_components, @"'", "")}'";
+        var forInstructors = _instructors is null ? "NULL" : $"'{Regex.Replace(_instructors, @"'", "")}'";
+        var forNotes = _notes is null ? "NULL" : $"'{Regex.Replace(_notes, @"'", "")}'";
+        var forTermsOffered = _termsOffered is null ? "NULL" : $"'{Regex.Replace(_termsOffered, @"'", "")}'";
+        
+        return @$"(1,'{Type}',{Number},'{Regex.Replace(Name, @"'", "")}','{Credits}',{forDescription},{forComponents},{forInstructors},{forNotes},{forTermsOffered},{Duration})";
+    }
+
+    public static string AsSqlCommand(string tableName, List<Course> courses)
+    {
+        var values = string.Join(",\n", courses.Select(course => course.AsSqlEntry()));
+
+        return $"INSERT INTO {tableName} ([university-id], [type], [number], [name], [credits], [description], " + 
+               $"[components], [instructors], [notes], [terms-offered], [duration]) VALUES\n{values};" ;
+    }
+
+
+
     /// <summary>
     ///     A helper class that stores data about which course is a prerequisite to another course.
     /// </summary>

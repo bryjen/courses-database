@@ -20,6 +20,7 @@ public sealed class ConcordiaWebScraper : WebScraper
     /// </summary>
     public ConcordiaWebScraper() : base("Data/Web/Concordia/concordia_urls.yaml") { }
 
+    
     /// <summary>
     ///     Web-scrapes a passed list, and returns a list of <b>RAW</b> string text data from every course identified.
     /// </summary>
@@ -64,6 +65,7 @@ public sealed class ConcordiaWebScraper : WebScraper
         return accumulationList;
     }
 
+    
     /// <summary>
     ///     Scrapes a specific url. Returns a list of <b>RAW</b> string text data from every course identified.
     /// </summary>
@@ -109,136 +111,208 @@ public sealed class ConcordiaWebScraper : WebScraper
             .ToList();
     }
 
+    
+    /// <summary>
+    ///     Transforms raw web-scraped string data (in HTML format) into a <c>Course</c> object.
+    /// </summary>
+    /// <param name="rawString"> The raw HTML data as a string. </param>
+    /// <returns> A <c>Course</c> object instantiated from the given data. </returns>
     public override Course TransformToCourse(string rawString)
     {
-        var course = new Course();
+        Course course = new ConcordiaCourse();
+
+        //  Initializes the 'Type', 'Number', 'Credits', and 'Name' attributes
+        InitializeBasicData(ref course, rawString);
         
-        Console.WriteLine("\n");
         
         var htmlDoc = new HtmlDocument();
         htmlDoc.LoadHtml(rawString);
         
+        //  Gets the group of nodes which contains the data for 'Description'
+        var dataNodes = htmlDoc
+            .DocumentNode                                                                   //  Get root HTML node
+            .SelectSingleNode("//div[@class='content accordion_accordion_panel']")          //  Gets the parent 'div' for the tags containing the data 
+            .SelectNodes("./*")                                                             //  Gets the direct children of the tag
+            .Where(node => !node.Name.Equals("br", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        
+        //  Initializes 'Description'
+        InitializeDescription(ref course, dataNodes);
+        
+        //  Initializes 'Components'
+        InitializeComponents(ref course, dataNodes);
+        
+        //  Initializes 'Notes'
+        InitializeNotes(ref course, dataNodes);
+        
+        //  Initializes 'PreRequisites'
+        InitializePrerequisites(ref course, dataNodes);
 
-        {   //  Sets the 'title', 'number', 'name', and 'credits' attributes of a course. These attributes should be 
-            //  present in ALL courses and CAN NOT be null.
-            HtmlNode titleNode = htmlDoc
-                .DocumentNode                                                                //  Get root HTML node
-                .Descendants("h3")                                                           //  Get all child 'h3' tags
-                .First(node => node.GetAttributeValue("class", "").Contains("title"));       //  Filter those who has 'class' equal to 'title'
+#if DEBUG   //  Prints representation of the course when in debug mode
+        Console.WriteLine("\n" + course);
+        Console.WriteLine("-> " + course.Description);
+        Console.WriteLine("-> " + course.Components);
+        Console.WriteLine("-> " + course.Notes);
+        Console.WriteLine("-> Duration: " + course.Duration);
+#endif
+        return course;
+    }
+    
 
-            var typeRegex = new Regex(@"^\D{4}");
-            var numberRegex = new Regex(@"\d{3,5}");
-            var creditsRegex = new Regex(@"\(\d(.\d+)? credits?\)");
+    //  Initializes the 'Type', 'Number', 'Credits', and 'Name' attributes
+    //  It does so by accessing the 'h3' node/element with the class of 'title'. 
+    //  All the data is stored as a single string in this node and this data is broken down and used for each attribute.
+    private static void InitializeBasicData(ref Course course, string rawString)
+    {
+        //  -------------------------------------Setup the objects------------------------------------------------------
+        //  Initialize a 'HtmlDocument' object so we can search for specific tags.
+        var htmlDoc = new HtmlDocument();
+        htmlDoc.LoadHtml(rawString);
+        
+        //  Obtains the node containing the required data
+        HtmlNode titleNode = htmlDoc
+            .DocumentNode                                                                //  Get root HTML node
+            .Descendants("h3")                                                           //  Get all child 'h3' tags
+            .First(node => node.GetAttributeValue("class", "").Contains("title"));       //  Filter those who has 'class' equal to 'title'
+        
+        //  Declare regex objects to parse data
+        var typeRegex = new Regex(@"^\D{4}");
+        var numberRegex = new Regex(@"\d{3,5}");
+        var creditsRegex = new Regex(@"\(\d+(.\d+)? credits?\)");
+        
+        
+        //  -------------------------------------Filling in the values--------------------------------------------------
+        //  Attempting to fill in the 'Type' attribute
+        var typeMatch = typeRegex.Match(titleNode.InnerText);
+        if (typeMatch.Success)
+            course.Type = typeMatch.Value;
+        else
+            throw new ArgumentException(@"Cannot find the value for the 'Type' attribute.\n" +
+                                        $"Tag <h3 class=\"title\">;{titleNode.InnerText}");
 
-            //  Attempting to fill in the 'Type' attribute
-            var typeMatch = typeRegex.Match(titleNode.InnerText);
-            if (typeMatch.Success)
-                course.Type = typeMatch.Value;
-            else
-                throw new ArgumentException(@"Cannot find the value for the 'Type' attribute.\n" +
-                                            $"Tag <h3 class=\"title\">;{titleNode.InnerText}");
+        //  Attempting to fill in the 'Number' attribute
+        var numberMatch = numberRegex.Match(titleNode.InnerText);
+        if (numberMatch.Success)
+            course.Number = Convert.ToInt32(numberMatch.Value);
+        else
+            throw new ArgumentException("Cannot find the value for the 'Number' attribute.\n" +
+                                        $"Tag <h3 class=\"title\">;{titleNode.InnerText}");
 
-            //  Attempting to fill in the 'Number' attribute
-            var numberMatch = numberRegex.Match(titleNode.InnerText);
-            if (numberMatch.Success)
-                course.Number = Convert.ToInt32(numberMatch.Value);
-            else
-                throw new ArgumentException("Cannot find the value for the 'Number' attribute.\n" +
-                                            $"Tag <h3 class=\"title\">;{titleNode.InnerText}");
-
-            //  Attempting to fill in the 'Credits' attribute
-            var creditsMatch = creditsRegex.Match(titleNode.InnerText);
-            if (creditsMatch.Success)
-            {
-                Match creditsValueMatch = new Regex(@"\.?\d+(.\d+)?").Match(creditsMatch.Value);
-                if (creditsValueMatch.Success)
-                    course.Credits = creditsValueMatch.Value;
-            }
-            else
-            {
-                throw new ArgumentException("Cannot find the value for the 'Credits' attribute.\n" +
-                                            $"Tag <h3 class=\"title\">;{titleNode.InnerText}");
-            }
-
-            //  Attempting to fill in the 'Name' attribute.
-            //  Does so by deleting every other component in the string using regex.
-            string name = typeRegex.Replace(titleNode.InnerText, "");
-            name = numberRegex.Replace(name, "");
-            name = creditsRegex.Replace(name, "");
-            name = name.Trim();
-            course.Name = name;
+        //  Attempting to fill in the 'Credits' attribute
+        var creditsMatch = creditsRegex.Match(titleNode.InnerText);
+        if (creditsMatch.Success)
+        {
+            Match creditsValueMatch = new Regex(@"\.?\d+(.\d+)?").Match(creditsMatch.Value);
+            if (creditsValueMatch.Success)
+                course.Credits = creditsValueMatch.Value;
+        }
+        else
+        {
+            throw new ArgumentException("Cannot find the value for the 'Credits' attribute.\n" +
+                                        $"Tag <h3 class=\"title\">;{titleNode.InnerText}");
         }
 
-        {   //  Sets the 'Description' attribute
-            try
-            {
-                var dataNodes = htmlDoc
-                    .DocumentNode                                                                   //  Get root HTML node
-                    .SelectSingleNode("//div[@class='content accordion_accordion_panel']")          //  Gets the parent 'div' for the tags containing the data 
-                    .SelectNodes("./*")                                                             //  Gets the direct children of the tag
-                    .Where(node => !node.Name.Equals("br", StringComparison.OrdinalIgnoreCase));
+        //  Attempting to fill in the 'Name' attribute.
+        //  Does so by deleting every other component in the string using regex.
+        string name = typeRegex.Replace(titleNode.InnerText, "");
+        name = numberRegex.Replace(name, "");
+        name = creditsRegex.Replace(name, "");
+        name = name.Trim();
+        course.Name = name;
+    }
 
-                Console.WriteLine(course);
-                dataNodes.ToList().ForEach(node => Console.WriteLine(Regex.Replace("|>" + node.InnerText, @"[\n]*", "")));
-                //dataNodes.ToList().ForEach(node => Console.WriteLine(node));
-            } catch (Exception) { } //  Ignored
+    
+    //  Initializes the 'Description' attribute
+    //  Takes a list of node/element objects. There exists two cases on how the description is represented:
+    //      1. The description is spanned two nodes
+    //      2. The description is contained in just one node
+    //
+    //  First we see if the current node JUST contains the text "Description:"
+    //      Then we see if the node after that contains info about the components or the notes. 
+    //          IF NOT, then the next data has to be about the description, hence the description is spanned in two
+    //          IF YES, error case
+    //  So now we know that the description is spanned over two nodes.
+    //  We check then if the current node starts with "Description:" then contains some text after
+    //          IF YES, we cut of the start, take the rest
+    //          IF NO, error case
+    private static void InitializeDescription(ref Course course, IReadOnlyList<HtmlNode> dataNodes)
+    {
+        //  Anonymous function that returns the inner text of an HTML node in lowercase with leading/training spaces removed
+        string GetInnerTextSimplified(HtmlNode node) => node.InnerText.ToLower().Trim();
+        
+        for (var i = 0; i < dataNodes.Count; i++)
+        {
+            //  Case #1, SEPARATE tags.
+            //  If the inner text in the tag is just 'description:' and the next tag does not indicate the 'component'
+            //  or 'note' attribute, then the inner text HAS to be for the description attribute
+            if (GetInnerTextSimplified(dataNodes[i]) == "description:" &&
+                    (!GetInnerTextSimplified(dataNodes[i + 1]).Contains("component(s)")
+                    || !GetInnerTextSimplified(dataNodes[i + 1]).Contains("notes")))
+            {
+                course.Description = dataNodes[i + 1].InnerText.Trim();
+                return;
+            }
+            
+            //  Case #2, SAME tag.
+            //  Otherwise, if the inner text contains the description, then the value is enclosed within the tag.
+            if (new Regex(@"^description:.*").IsMatch(GetInnerTextSimplified(dataNodes[i])))
+            {
+                course.Description = Regex.Replace(dataNodes[i].InnerText, @"Description:", "").Trim();
+                return;
+            }
         }
 
+        //  If description is absent, set it as null
+        course.Description = null;
+    }
+
+    
+    //  Initializes the 'Components' attribute
+    //  Unlike 'Description', the data for the components attribute occur only in one format. "Component(s): ..."
+    //  Hence, we locate the node starting with "Components(s):", then we remove it, resulting in the final data.
+    private static void InitializeComponents(ref Course course, IReadOnlyList<HtmlNode> dataNodes)
+    {
+        //  Attempts to locate the node which starts with the substring "component(s):"
+        HtmlNode? node = dataNodes.FirstOrDefault(node => new Regex(@"(?i)component\(s\):?.*").IsMatch(node.InnerText));
         
-
-
-
-/*
-             try
-            {
-                IEnumerable<HtmlNode> descriptionNode = htmlDoc
-                    .DocumentNode
-                    .Descendants("p")
-                    .Where(node => node.GetAttributeValue("class", "").Contains("crse-descr"));
-
-                var description = descriptionNode
-                    .Select(node => node.InnerText)
-                    .Aggregate((currentAggregate, text) => currentAggregate + text);
-
-                course.Description = description;
-            } catch (Exception) { } //  Ignored
- 
-        //  Gets 'prerequisites' RAW text
-        divs = htmlDoc.DocumentNode
-            .Descendants("span")
-            .Where(node => node.GetAttributeValue("class", "").Contains("requisites"));
-        divs.ToList().ForEach(x => Console.WriteLine(x.InnerText));
+        //  If not found, set to null. Otherwise, remove the beginning "component(s):" and set the rest as the value
+        //  for the attribute
+        course.Components = (node is null) ? null : Regex.Replace(node.InnerText, @"(?i)component\(s\):?", "").Trim();
         
-        try
-        {
-            //  Gets 'description'
-            divs = htmlDoc.DocumentNode
-                .Descendants("p")
-                .Where(node => node.GetAttributeValue("class", "").Contains("crse-descr"));
-            divs.ToList().ForEach(x => Console.WriteLine(x.InnerText));
-        } catch (Exception) { } //  Ignored
+        
+        //  Data indicating whether or not a course is spanned over two terms is contained HERE, in the 'components'
+        if (course.Components is not null && course.Components.ToLower().Contains("two terms"))
+            course.Duration = 2;
+    }
 
-        try
-        {
-            //  Gets 'components' RAW text
-            divs = htmlDoc.DocumentNode
-                .Descendants("span")
-                .Where(node => node.GetAttributeValue("class", "").Contains("components"));
-            divs.ToList().ForEach(x => Console.WriteLine(x.InnerText));
-        } catch (Exception) { } //  Ignored
+    
+    //  Initializes the 'Notes' attribute
+    //  
+    private static void InitializeNotes(ref Course course, IReadOnlyList<HtmlNode> dataNodes)
+    {
+        //  Attempts to locate the node whose class is "course-notes"
+        HtmlNode? node = dataNodes
+            .FirstOrDefault(node => node.Attributes.Contains("class") && node.Attributes["class"].Value.Contains("course-notes"));
 
-        try
-        {
-            //  Gets 'notes' RAW text
-            divs = htmlDoc.DocumentNode
-                .Descendants("ul")
-                .First(node => node.GetAttributeValue("class", "").Contains("course-notes"))
-                .Descendants("li")
-                .Where(node => node.GetAttributeValue("class", "").Contains("xlarge-text"));
-            divs.ToList().ForEach(x => Console.WriteLine("-> " + x.InnerText));
-        } catch (Exception) { } //  Ignored
- */
+        //  If node is null, then there are no notes. Returns
+        course.Notes = null;
+        if (node is null)
+            return;
 
-        return new Course();
+        //  Select all children nodes, each of which is a separate node. Collapse/join into a single string with ';'
+        //  as the delimiter
+        var notes = node
+            .SelectNodes("./*")
+            .Select(htmlNode => Regex.Replace(htmlNode.InnerText, @"[^a-zA-Z0-9' .,-‑]", "").Trim())
+            .ToList();
+        course.Notes = string.Join(";", notes);
+    }
+
+
+    //  TODO: IMPLEMENT
+    private static void InitializePrerequisites(ref Course course, IReadOnlyList<HtmlNode> dataNodes)
+    {
+        return;
+        throw new NotImplementedException();
     }
 }
