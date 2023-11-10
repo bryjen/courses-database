@@ -4,38 +4,18 @@ using HtmlAgilityPack;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
-using UniversityDatabase.Core;
+using ApplicationLibrary.Data.Entities;
 
-namespace UniversityDatabase.Data.Web.Concordia;
+namespace ApplicationLibrary.Data.WebScraping;
 
-/// <summary>
-///     An instance of this class represents a web-scraper tailored specifically to extract course data from Concordia's
-///     website(s). 
-/// </summary>
+/// <summary> An instance of this class represents a web-scraper tailored specifically to extract course data from Concordia's website(s). </summary>
 [SuppressMessage("ReSharper", "EmptyGeneralCatchClause")]
 public sealed class ConcordiaWebScraper : WebScraper
 {
-    /// <summary>
-    ///     Constructs a <c>ConcordiaWebScraper</c> with the urls provided in a .yaml file.
-    /// </summary>
-    public ConcordiaWebScraper() : base("Data/Web/Concordia/concordia_urls.yaml") { }
-
+    public ConcordiaWebScraper() : base(@"src/ApplicationLibrary/Config/files/concordia_urls.json") { }
     
-    /// <summary>
-    ///     Web-scrapes a passed list, and returns a list of <b>RAW</b> string text data from every course identified.
-    /// </summary>
-    /// <param name="urls"> A list of urls to be web-scraped. </param>
-    /// <returns>
-    ///     A list of string data. Each string is raw unprocessed data that can be converted to a <c>Course</c> object.
-    /// </returns>
-    /// <remarks>
-    ///     <para>
-    ///         Scraping a particular url may sometimes unpredictably throw an error, hence we allocate
-    ///         <see cref="WebScraper.MaximumAttempts"/> attempts to scrape the data in a given url. If it fails all
-    ///         the attempts, it is skipped over.
-    ///     </para>
-    /// </remarks>
-    /// <seealso cref="TransformToCourses"/>
+    public ConcordiaWebScraper(string filePath) : base(filePath) { }
+    
     protected override List<string> Scrape(List<string> urls)
     {
         var accumulationList = new List<string>();
@@ -64,32 +44,11 @@ public sealed class ConcordiaWebScraper : WebScraper
 
         return accumulationList;
     }
-
     
-    /// <summary>
-    ///     Scrapes a specific url. Returns a list of <b>RAW</b> string text data from every course identified.
-    /// </summary>
-    /// <param name="url"> The url of the website to scrape. </param>
-    /// <returns>
-    ///     A list of string data. Each string is raw unprocessed data that can be converted to a <c>Course</c> object.
-    /// </returns>
-    /// <remarks>
-    ///     <para>
-    ///         Data scraped can be converted into <c>Course</c> object specifically representing a Concordia course.
-    ///     </para>
-    /// </remarks>
-    /// <seealso cref="TransformToCourses"/>
-    /// <exception cref="NoSuchElementException"></exception>       //  todo update documentation here
-    /// <exception cref="WebDriver.UnpackAndThrowOnError"></exception>
     protected override List<string> ScrapeWebsite(string url)
     {
-        //  Initialize a driver for interacting with Chrome (browser)
         using IWebDriver driver = new ChromeDriver();
-        
-        //  An object that can establish wait conditions on the driver. Default limit/timeout is 10 seconds.
-        var  wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-            
-        //  Navigate to webpage
+        var  wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));    //  Timeout condition is 10 seconds.
         driver.Navigate().GoToUrl(url);
         
         // Since there is a message where we are prompted to accept cookies, we wait until the specific element is
@@ -102,28 +61,17 @@ public sealed class ConcordiaWebScraper : WebScraper
 
         //  Finds all elements that have the class "course"
         var webElements = wait.Until(drv => drv.FindElements(By.ClassName("course")));
-
-        //  TODO: Can be further optimized by splitting work into further threads & then joining
-        //  Extracts the raw HTML data of the element as a string
         return webElements.AsParallel()
             .WithMergeOptions(ParallelMergeOptions.AutoBuffered)
             .Select(webElement => webElement.GetAttribute("outerHTML"))
             .ToList();
     }
-
     
-    /// <summary>
-    ///     Transforms raw web-scraped string data (in HTML format) into a <c>Course</c> object.
-    /// </summary>
-    /// <param name="rawString"> The raw HTML data as a string. </param>
-    /// <returns> A <c>Course</c> object instantiated from the given data. </returns>
     public override Course TransformToCourse(string rawString)
     {
-        Course course = new ConcordiaCourse();
-
-        //  Initializes the 'Type', 'Number', 'Credits', and 'Name' attributes
-        InitializeBasicData(ref course, rawString);
+        var course = new Course();
         
+        InitializeBasicData(ref course, rawString);
         
         var htmlDoc = new HtmlDocument();
         htmlDoc.LoadHtml(rawString);
@@ -136,16 +84,9 @@ public sealed class ConcordiaWebScraper : WebScraper
             .Where(node => !node.Name.Equals("br", StringComparison.OrdinalIgnoreCase))
             .ToList();
         
-        //  Initializes 'Description'
         InitializeDescription(ref course, dataNodes);
-        
-        //  Initializes 'Components'
         InitializeComponents(ref course, dataNodes);
-        
-        //  Initializes 'Notes'
         InitializeNotes(ref course, dataNodes);
-        
-        //  Initializes 'PreRequisites'
         InitializePrerequisites(ref course, dataNodes);
 
 #if DEBUG   //  Prints representation of the course when in debug mode
@@ -287,7 +228,8 @@ public sealed class ConcordiaWebScraper : WebScraper
 
     
     //  Initializes the 'Notes' attribute
-    //  
+    //  Similar to 'Description', if a node element contains the class value "course-notes", it will always have a list
+    //  containing extra notes for the course.
     private static void InitializeNotes(ref Course course, IReadOnlyList<HtmlNode> dataNodes)
     {
         //  Attempts to locate the node whose class is "course-notes"

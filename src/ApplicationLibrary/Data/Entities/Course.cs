@@ -1,10 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
-using UniversityDatabase.Data.Database;
 
-namespace UniversityDatabase.Core;
+namespace ApplicationLibrary.Data.Entities;
 
 /// <summary>
 ///     Represents a specific course/class in a university.
@@ -16,23 +13,20 @@ namespace UniversityDatabase.Core;
 ///     </para>
 /// </remarks>
 /// <seealso cref="PrerequisiteCourseData"/>
-/// <seealso cref="DatabaseDataLoader"/>>
 [Keyless]
 [Table("courses")]
-[SuppressMessage("ReSharper", "CollectionNeverQueried.Global")]
-[SuppressMessage("ReSharper", "InconsistentNaming")]
-public abstract class Course
+public class Course
 {
     //  Backing fields
-    protected string? _description = null;
-    protected string? _components = null;
-    protected string? _instructors = null;
-    protected string? _notes = null;
-    protected string? _termsOffered = null;
+    private string? _description;
+    private string? _components;
+    private string? _instructors;
+    private string? _notes;
+    private string? _termsOffered;
 
     /// <summary> Id of the university in which the course belongs to. </summary>
     [Column("university-id")]
-    public int UniversityId { get; internal set; } = 0;
+    public int UniversityId { get; internal set; }
     
     [Column("type")]
     public string Type { get; internal set; } = "NA";
@@ -127,39 +121,6 @@ public abstract class Course
         return $"{Type}|{Number}|{Name}|{Credits}";
     }
     
-    /// <summary> Returns a list of <c>Course</c> objects from a database instance. </summary>
-    /// <remarks>
-    ///     Connects to the database instance when called, which could be time consuming. Use as sparingly as possible.
-    /// </remarks>
-    /// <returns> A list of <c>Course</c> objects from a database instance. </returns>
-    public static List<Course> GetCourses()
-    {
-        var dataLoader = new DatabaseDataLoader();
-        return dataLoader.Courses;
-    }
-
-
-    public string AsSqlEntry()
-    {
-        var forDescription = _description is null ? "NULL" : $"'{Regex.Replace(_description, @"'", "")}'";
-        var forComponents = _components is null ? "NULL" : $"'{Regex.Replace(_components, @"'", "")}'";
-        var forInstructors = _instructors is null ? "NULL" : $"'{Regex.Replace(_instructors, @"'", "")}'";
-        var forNotes = _notes is null ? "NULL" : $"'{Regex.Replace(_notes, @"'", "")}'";
-        var forTermsOffered = _termsOffered is null ? "NULL" : $"'{Regex.Replace(_termsOffered, @"'", "")}'";
-        
-        return @$"(1,'{Type}',{Number},'{Regex.Replace(Name, @"'", "")}','{Credits}',{forDescription},{forComponents},{forInstructors},{forNotes},{forTermsOffered},{Duration})";
-    }
-
-    public static string AsSqlCommand(string tableName, List<Course> courses)
-    {
-        var values = string.Join(",\n", courses.Select(course => course.AsSqlEntry()));
-
-        return $"INSERT INTO {tableName} ([university-id], [type], [number], [name], [credits], [description], " + 
-               $"[components], [instructors], [notes], [terms-offered], [duration]) VALUES\n{values};" ;
-    }
-
-
-
     /// <summary>
     ///     A helper class that stores data about which course is a prerequisite to another course.
     /// </summary>
@@ -172,7 +133,7 @@ public abstract class Course
     ///         This class is required solely to instantiate the <see cref="Course.Prerequisites"/> attribute in
     ///         <see cref="Course"/>. As such, it is not meant to be used anywhere else in the assembly and its lifetime
     ///         is intended to be until the 'full initialization' of <c>Course</c> objects when loaded from the
-    ///         database instance. To see more, see <see cref="DatabaseDataLoader"/>.
+    ///         database instance.
     ///     </para>
     /// </remarks>
     [Keyless]
@@ -197,4 +158,3 @@ public abstract class Course
         }
     }
 }
-

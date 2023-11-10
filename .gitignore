@@ -89,14 +89,11 @@ ScaffoldingReadMe.txt
 *.DotSettings.user
 
 # Project directories/files
-UniversityDatabase/bin
-UniversityDatabase/obj
-UniversityDatabase/config.yaml
+.git/
 
-courses-database-consoleapp/bin
-courses-database-consoleapp/obj
+src/ApplicationLibrary/bin
+src/ApplicationLibrary/obj
+src/ApplicationLibrary/Config/files/appsettings.json
 
-CoursesTests/bin
-CoursesTests/obj
-
-output/
+tests/ApplicationLibrary.Tests/bin
+tests/ApplicationLibrary.Tests/obj

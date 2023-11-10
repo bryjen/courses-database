@@ -1,10 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <!-- 
-    Symbols/Constants:
-    'TEST_WEBSCRAPING'      -       Enables/Disables testing of the web scraper component
-    'TEST_CONNECTION'       -       Enables/Disables testing for connecting to the database and executing a sample query
-    -->
     <PropertyGroup>
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -12,9 +7,6 @@
 
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
-        <Configurations>Another;Debug;Release</Configurations>
-        <Platforms>AnyCPU</Platforms>
-        <DefineConstants>TEST_WEBSCRAPING;TEST_CONNECTION</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>
@@ -26,7 +18,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\UniversityDatabase\UniversityDatabase.csproj" />
+      <ProjectReference Include="..\..\src\ApplicationLibrary\ApplicationLibrary.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Config\files\concordia_urls.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
