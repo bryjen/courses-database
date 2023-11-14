@@ -7,12 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Controllers\" />
-      <Folder Include="Models\" />
-      <Folder Include="Views\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <PackageReference Include="HtmlAgilityPack" Version="1.11.54" />
       <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.2" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.13" />

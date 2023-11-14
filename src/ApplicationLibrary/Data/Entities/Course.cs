@@ -112,7 +112,37 @@ public class Course
     {
         return $"{Type}|{Number}|{Name}|{Credits}";
     }
-    
+
+    public override bool Equals(object? other)
+    {
+        if (other is null || other.GetType() == GetType())
+            return false;
+
+        var otherCourse = (Course) other;
+        return this.Type == otherCourse.Type
+               && this.Number == otherCourse.Number
+               && this.Name == otherCourse.Name
+               && this.Credits == otherCourse.Credits;
+    }
+
+    public override int GetHashCode()
+    {
+        var hashCode = new HashCode();
+        hashCode.Add(_description);
+        hashCode.Add(_components);
+        hashCode.Add(_instructors);
+        hashCode.Add(_notes);
+        hashCode.Add(_termsOffered);
+        hashCode.Add(UniversityId);
+        hashCode.Add(Type);
+        hashCode.Add(Number);
+        hashCode.Add(Name);
+        hashCode.Add(Credits);
+        hashCode.Add(Duration);
+        hashCode.Add(Prerequisites);
+        return hashCode.ToHashCode();
+    }
+
     /// <summary>
     ///     A helper class that stores data about which course is a prerequisite to another course.
     /// </summary>
