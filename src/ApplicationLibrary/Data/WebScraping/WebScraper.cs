@@ -55,7 +55,7 @@ public abstract class WebScraper
     protected abstract List<string> Scrape(List<string> urls);
 
     /// <summary> Scrapes a specific url. Returns a list of <b>RAW</b> string text data from every course identified. </summary>
-    protected abstract List<string> ScrapeWebsite(string url);
+    public abstract List<string> ScrapeWebsite(string url);
     
     /// <summary> Parses raw HTML data into a <code>Course</code> object. </summary>
     public abstract Course TransformToCourse(string rawString);

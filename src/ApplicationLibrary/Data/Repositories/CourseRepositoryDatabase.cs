@@ -18,7 +18,8 @@ public sealed class CourseRepositoryDatabase : DbContext, IRepository<Course>
         
         _courses = Courses!.ToList();
         var prerequisites =  CoursesPrerequisites!.ToList();
-        _courses.ForEach(course => course.InitializePrerequisites(prerequisites));
+
+        //_courses.ForEach(course => course.InitializePrerequisites(prerequisites));
     }
     
     public Course? this[int index]

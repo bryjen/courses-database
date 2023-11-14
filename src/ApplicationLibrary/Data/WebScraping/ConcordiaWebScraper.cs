@@ -45,7 +45,7 @@ public sealed class ConcordiaWebScraper : WebScraper
         return accumulationList;
     }
     
-    protected override List<string> ScrapeWebsite(string url)
+    public override List<string> ScrapeWebsite(string url)
     {
         using IWebDriver driver = new ChromeDriver();
         var  wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));    //  Timeout condition is 10 seconds.
@@ -89,6 +89,9 @@ public sealed class ConcordiaWebScraper : WebScraper
         InitializeNotes(ref course, dataNodes);
         InitializePrerequisites(ref course, dataNodes);
 
+        //  Initializes some other values
+        course.UniversityId = 1;
+        
 #if DEBUG   //  Prints representation of the course when in debug mode
         Console.WriteLine("\n" + course);
         Console.WriteLine("-> " + course.Description);
@@ -251,10 +254,33 @@ public sealed class ConcordiaWebScraper : WebScraper
     }
 
 
-    //  TODO: IMPLEMENT
+    //  Initializes the 'Prerequisites attribute'
+    //  A course has prerequisites if the first of the data nodes is a '<p>' node. We check for this node and process
+    //  it accordingly if present. We then check if it is split into two separate tags by checking if the first tag 
+    //  just contains 'prerequisite/corequisite:'.
     private static void InitializePrerequisites(ref Course course, IReadOnlyList<HtmlNode> dataNodes)
     {
-        return;
-        throw new NotImplementedException();
+        if (dataNodes[0].Name != "p")
+            return;
+
+        var requisiteNode = dataNodes[0].InnerText.ToLower().Trim() == "prerequisite/corequisite:" ? dataNodes[1] : dataNodes[0];
+
+        //  Process the raw text using a series of regex replaces
+        var data = requisiteNode.InnerText;
+        data = Regex.Replace(data, @"prerequisite(/corequisite)?: +", "", RegexOptions.IgnoreCase);
+        data = Regex.Replace(data, @"the following courses? must be completed previously( or concurrently)?: +", "", RegexOptions.IgnoreCase);
+        data = Regex.Replace(data, @"[:|\.]", ";", RegexOptions.IgnoreCase);
+        data = Regex.Replace(data, @" +or +", "/", RegexOptions.IgnoreCase);
+        data = Regex.Replace(data, @"; +", ";", RegexOptions.IgnoreCase);
+        data = Regex.Replace(data, @";$", "", RegexOptions.IgnoreCase);
+
+        //  Split the string, 'filter' all valid course representations
+        course.Prerequisites = data.Split(";").ToList().Select(prereq =>
+        {
+            var matches = Regex.Matches(prereq, @"\b\w{4} +\d{3,4}");
+            return String.Join("/", matches);
+        }).ToList();
+
+        course.Prerequisites.RemoveAll(string.IsNullOrEmpty);
     }
 }

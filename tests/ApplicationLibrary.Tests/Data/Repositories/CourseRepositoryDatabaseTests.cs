@@ -12,7 +12,7 @@ public class CourseRepositoryDatabaseTests
     public void ConnectionTest()
     {
         IRepository<Course> courseRepo = new CourseRepositoryDatabase(AppSettings.DbConnectionString);
-
+        
         if (courseRepo.IsValid())
             Assert.Pass();
         else

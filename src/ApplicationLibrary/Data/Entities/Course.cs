@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApplicationLibrary.Data.Entities;
@@ -86,33 +88,23 @@ public class Course
     public int Duration { get; internal set; } = 1; 
 
     /// <summary> A list of prerequisite courses in string format. </summary>
-    public List<string> Prerequisites { get; } = new List<string>();
+    public List<string> Prerequisites { get; set; } = new List<string>();
+
+    public PrerequisiteCourseData GetPrerequisiteCourseData()
+    { 
+        return new PrerequisiteCourseData(UniversityId, Type, Number, string.Join("~", Prerequisites));
+    }
     
     /// <summary> Initializes the <see cref="Prerequisites"/> attribute. </summary>
     /// <param name="prerequisitesData">
     ///     A list of <c>PrerequisiteCourseData</c> objects containing all courses and their prerequisites.
     /// </param>
     /// <remarks>
-    ///     <para>
-    ///         This method is meant to be called directly after initializing a <c>Course</c> object, before it can be
-    ///         used in any other statement or in 'client' code.
-    ///     </para>
+    ///     This method is meant to be called directly after initializing a <c>Course</c> object, before it can be used
+    ///     in any other statement or in 'client' code.
     /// </remarks>
     internal void InitializePrerequisites(IEnumerable<PrerequisiteCourseData> prerequisitesData)
     {
-        //  LINQ Query Syntax to find all prerequisite courses (signature only) for this course
-        var listOfPrerequisites = 
-            from data in prerequisitesData 
-            where data.CourseType == Type && data.CourseNumber == Number
-            orderby data.PrerequisiteCourseType
-            select (data.PrerequisiteCourseType, data.PrerequisiteCourseNumber);
-        
-        //  Append signatures to list of prerequisites
-        foreach (var dataTuple in listOfPrerequisites)
-        {
-            Prerequisites.Add($"{dataTuple.PrerequisiteCourseType} {dataTuple.PrerequisiteCourseNumber}");
-        }
-
     }
 
     /// <summary> Returns a string representation of the <code>Course</code> object. </summary>
@@ -136,25 +128,46 @@ public class Course
     ///         database instance.
     ///     </para>
     /// </remarks>
-    [Keyless]
     [Table("courses-prerequisites")]
-    internal sealed class PrerequisiteCourseData
+    public sealed class PrerequisiteCourseData
     {
-        [Column("prereq-type")]
-        public string PrerequisiteCourseType { get; internal set; } = "NA";
-    
-        [Column("prereq-number")]
-        public int PrerequisiteCourseNumber { get; internal set; }
+        public PrerequisiteCourseData(int universityId, string type, int number, string prerequisitesString)
+        {
+            UniversityId = universityId;
+            Type = type;
+            Number = number;
+            PrerequisitesString = prerequisitesString;
+        }
 
-        [Column("type")] 
-        public string CourseType { get; internal set; } = "NA";
-    
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("entry-id")]
+        public int Id { get; set; }
+
+        [Column("university-id")]
+        public int UniversityId { get; internal set; }
+        
+        [Column("type")]
+        public string Type { get; internal set; }
+
         [Column("number")]
-        public int CourseNumber { get; internal set; }
+        public int Number { get; internal set; }
+
+        [Column("prereqs")]
+        public string PrerequisitesString { get; internal set; }
 
         public override string ToString()
         {
-            return $"[prereq] {PrerequisiteCourseType} {PrerequisiteCourseNumber} -> [actual] {CourseType} {CourseNumber}";
+            return $"{UniversityId} | {Type} | {Number} | {PrerequisitesString}";
+        }
+
+        /// <summary> Splits the object into two or more <code>PrerequisiteCourseData</code> objects if they have more
+        ///           than one prerequisite. </summary>
+        /// <example> "COMP 248~MATH 203~MATH 204" -> "COMP 248" "MATH 203" "MATH 204" on 3 separate objects. </example>
+        public IEnumerable<PrerequisiteCourseData> SplitPrerequisiteCourseData()
+        {
+            IEnumerable<string> splitPrerequisitesString = PrerequisitesString.Split("~");
+            return splitPrerequisitesString.Select(str => new PrerequisiteCourseData(UniversityId, Type, Number, str));
         }
     }
 }
