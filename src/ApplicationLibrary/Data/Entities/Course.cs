@@ -29,25 +29,25 @@ public class Course
 
     /// <summary> Id of the university in which the course belongs to. </summary>
     [Column("university-id")]
-    public int UniversityId { get; internal set; }
+    public int UniversityId { get; set; }
     
     [Column("type")]
-    public string Type { get; internal set; } = "NA";
+    public string Type { get; set; } = "NA";
     
     [Column("number")]
-    public int Number { get; internal set; }
+    public int Number { get; set; }
     
     [Column("name")]
-    public string Name { get; internal set; } = "NA";
+    public string Name { get; set; } = "NA";
     
     [Column("credits")]
-    public string Credits { get; internal set; } = "NA";
+    public string Credits { get; set; } = "NA";
     
     [Column("description")]
     public string? Description
     {
-        get =>          _description ?? "NA";
-        internal set => _description = value;
+        get =>          _description ?? "NA"; 
+        set => _description = value;
     }
 
     /// <summary> The corresponding components of the course. ex. Lecture/Lab/Tutorial ... </summary>
@@ -55,7 +55,7 @@ public class Course
     public string? Components
     {
         get =>          _components ?? "NA";
-        internal set => _components = value;
+        set => _components = value;
     }
 
     /// <summary> The main instructor/professor of the course. </summary>
@@ -63,7 +63,7 @@ public class Course
     public string? Instructors
     {
         get =>          _instructors ?? "NA";
-        internal set => _instructors = value;
+        set => _instructors = value;
     }
 
     /// <summary> Any other notable information about the course. </summary>
@@ -71,7 +71,7 @@ public class Course
     public string? Notes
     {
         get =>          _notes ?? "NA";
-        internal set => _notes = value!;
+        set => _notes = value!;
     }
 
     /// <summary>
@@ -80,21 +80,21 @@ public class Course
     [Column("terms-offered")]
     public string? TermsOffered
     {
-        get =>          _termsOffered ?? "NA";
-        internal set => _termsOffered = value;
+        get => _termsOffered ?? "NA";
+        set => _termsOffered = value;
     }
 
     /// <summary> How many semesters the course is spread over. </summary>
     [Column("duration")]
-    public int Duration { get; internal set; } = 1; 
+    public int Duration { get; set; } = 1; 
 
     /// <summary> A list of prerequisite courses in string format. </summary>
-    public List<string> Prerequisites { get; set; } = new List<string>();
-
-    
+    public List<string> Prerequisites { get; set; } 
     
     public Course()
-    { }
+    {
+        Prerequisites = new List<string>();
+    }
     
     public Course(int universityId, string type, int number, string name, string credits, string? description,
         string? components, string? instructors, string? notes, string? termsOffered, int duration,
@@ -130,6 +130,13 @@ public class Course
     /// </remarks>
     internal void InitializePrerequisites(IEnumerable<PrerequisiteCourseData> prerequisitesData)
     {
+        var prerequisites =
+            from prereq in prerequisitesData
+            where prereq.UniversityId == this.UniversityId && prereq.Type == this.Type && prereq.Number == this.Number
+            orderby prereq.UniversityId, prereq.Number
+            select prereq;
+
+        Prerequisites = prerequisites.Select(prereq => prereq.PrerequisitesString).ToList();
     }
 
     /// <summary> Returns a string representation of the <code>Course</code> object. </summary>

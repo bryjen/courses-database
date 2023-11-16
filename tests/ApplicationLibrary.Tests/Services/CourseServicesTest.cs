@@ -9,19 +9,6 @@ namespace ApplicationLibrary.Tests.Services;
 [TestFixture]
 public class CourseServicesTest
 {
-    private IServiceProvider _serviceProvider = null!;
-    private List<Course> _courses = null!;
-
-    [SetUp]
-    public void SetUp()
-    {
-        _serviceProvider = new ServiceCollection()
-            .AddTransient<IRepository<Course>>(_ => new CourseRepositoryDatabase(AppSettings.DbConnectionString))
-            .BuildServiceProvider();
-        
-        
-    }
-
     [Description("Tests for basic search functionality on the 'signature' of the course.")]
     [Category("Unit Test")]
     [Retry(3)]
@@ -34,7 +21,7 @@ public class CourseServicesTest
     [TestCase(1, "COMP", 228, "System Hardware", "3")]
     public void CourseMatchSearch1(int? universityId, string? courseType, int? courseNumber, string? courseName, string? credits)
     {
-        var courseRepository = _serviceProvider.GetService<IRepository<Course>>()!;
+        var courseRepository = TestSetup.ServiceProvider.GetService<IRepository<Course>>()!;
         var courseService = new CourseServices(courseRepository);
         var searchParameters = new CourseServices.SearchParameters(universityId, courseType, courseNumber, courseName, credits, null, null);
         
@@ -62,7 +49,7 @@ public class CourseServicesTest
     [Test]
     public void JustPrint()
     {
-        var courseService = new CourseServices(_serviceProvider.GetService<IRepository<Course>>()!);
+        var courseService = new CourseServices(TestSetup.ServiceProvider.GetService<IRepository<Course>>()!);
 
         var results = courseService.SearchCourses(new CourseServices.SearchParameters(1, "COMP", null, null, null, null, null));
         results.ToList().ForEach(Console.WriteLine);

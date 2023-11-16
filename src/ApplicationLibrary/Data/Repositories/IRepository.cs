@@ -6,6 +6,7 @@ public interface IRepository<T>
 {
     T? this[int index] { get; set; }
     
+    /// <summary> Get an <c>IEnumerable&lt;Course&gt;</c> object containing <b>all</b> data from the data source. </summary>
     IEnumerable<T> GetAll();
 
     /// <summary> Whether or not the data source is valid and can be read from safely. </summary>

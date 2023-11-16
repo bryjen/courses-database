@@ -97,3 +97,5 @@ src/ApplicationLibrary/Config/files/appsettings.json
 
 tests/ApplicationLibrary.Tests/bin
 tests/ApplicationLibrary.Tests/obj
+
+global.json

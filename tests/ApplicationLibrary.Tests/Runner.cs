@@ -36,16 +36,14 @@ public class Runner
         }
 
         var rawJson = File.ReadAllText(filePath);
-        var deserializedData = JsonSerializer.Deserialize<Course[]>(rawJson);
+        var deserializedData = JsonSerializer.Deserialize<List<Course>>(rawJson);
 
-        //  Console.WriteLine(rawJson);
-        
         if (deserializedData is null)
             return;
-            
-        var courses = deserializedData.ToList();
-        
-        
-        courses.ToList().ForEach(Console.WriteLine);
+
+        //var courses = deserializedData.ToList();
+        var courses = new CourseRepositoryDatabase(AppSettings.DbConnectionString).GetAll().ToList();
+        courses.ForEach(course => Console.WriteLine($"{course}\n{course.Description}\n{course.Components}\n{course.Notes}\n{string.Join(", ", course.Prerequisites)}\n"));
+
     }
 }
