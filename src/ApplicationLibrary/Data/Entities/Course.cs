@@ -15,6 +15,7 @@ namespace ApplicationLibrary.Data.Entities;
 ///     </para>
 /// </remarks>
 /// <seealso cref="PrerequisiteCourseData"/>
+[Serializable]
 [Keyless]
 [Table("courses")]
 public class Course
@@ -90,6 +91,30 @@ public class Course
     /// <summary> A list of prerequisite courses in string format. </summary>
     public List<string> Prerequisites { get; set; } = new List<string>();
 
+    
+    
+    public Course()
+    { }
+    
+    public Course(int universityId, string type, int number, string name, string credits, string? description,
+        string? components, string? instructors, string? notes, string? termsOffered, int duration,
+        List<string> prerequisites)
+    {
+        UniversityId = universityId;
+        Type = type;
+        Number = number;
+        Name = name;
+        Credits = credits;
+        Description = description;
+        Components = components;
+        Instructors = instructors;
+        Notes = notes;
+        TermsOffered = termsOffered;
+        Duration = duration;
+        Prerequisites = prerequisites;
+    }
+
+    /// <summary> Returns a <see cref="Course.PrerequisiteCourseData"/> corresponding to the course </summary>
     public PrerequisiteCourseData GetPrerequisiteCourseData()
     { 
         return new PrerequisiteCourseData(UniversityId, Type, Number, string.Join("~", Prerequisites));
@@ -115,14 +140,14 @@ public class Course
 
     public override bool Equals(object? other)
     {
-        if (other is null || other.GetType() == GetType())
+        if (other is null || other.GetType() != GetType())
             return false;
 
         var otherCourse = (Course) other;
-        return this.Type == otherCourse.Type
-               && this.Number == otherCourse.Number
-               && this.Name == otherCourse.Name
-               && this.Credits == otherCourse.Credits;
+        return    Type == otherCourse.Type
+               && Number == otherCourse.Number
+               && Name == otherCourse.Name
+               && Credits == otherCourse.Credits;
     }
 
     public override int GetHashCode()

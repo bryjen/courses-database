@@ -5,15 +5,22 @@ namespace ApplicationLibrary.Config;
 public static class AppSettings
 {
     public static readonly string DbConnectionString;
-
+    public static readonly string SolutionDirectory;
+    
     static AppSettings()
     {
         //  Obtaining data from the specified file
-        string rawJson = File.ReadAllText("Config/files/appsettings.json");
+        var rawJson = File.ReadAllText("Config/files/appsettings.json");
         var deserializedData = JsonSerializer.Deserialize<_AppSettings>(rawJson);
         
         //  Setting the static attributes
         DbConnectionString = deserializedData!.DbConnectionString;
+        
+        SolutionDirectory = Directory.GetCurrentDirectory();
+        while (!Directory.EnumerateFiles(SolutionDirectory, "courses-database.sln", SearchOption.TopDirectoryOnly).Any())
+        {
+            SolutionDirectory = Directory.GetParent(SolutionDirectory)?.FullName ?? string.Empty;
+        }
     }
     
     /// <summary>

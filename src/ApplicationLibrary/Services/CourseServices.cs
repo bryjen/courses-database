@@ -25,16 +25,23 @@ public class CourseServices
         /// <summary> Searches for and returns all courses that satisfy a given set of parameters and a set of courses. </summary>
         public static IEnumerable<Course> SearchCourses(SearchParameters searchParameters, IEnumerable<Course> courses)
         {
-            IEnumerable<Course> keywordsFiltered = FilterByKeywords(searchParameters.Keywords, courses);
-            IEnumerable<Course> componentsFiltered = FilterByLectureComponents(searchParameters.LectureComponents, courses);
+            var keywordsFiltered = FilterByKeywords(searchParameters.Keywords, ref courses);
+            var componentsFiltered = FilterByLectureComponents(searchParameters.LectureComponents, ref courses);
+
+            if (searchParameters.CourseType is null && searchParameters.CourseNumber is null &&
+                searchParameters.CourseName is null && searchParameters.Credits is null)
+                return keywordsFiltered.Intersect(componentsFiltered);
             
             FilterByUniversityId(searchParameters.UniversityId, ref courses);
             FilterByCourseType(searchParameters.CourseType, ref courses);
             FilterByCourseNumber(searchParameters.CourseNumber, ref courses);
             FilterByCourseName(searchParameters.CourseName, ref courses);
             FilterByCredits(searchParameters.Credits, ref courses);
-            
-            return courses;
+
+            return courses
+                .Intersect(keywordsFiltered)
+                .Intersect(componentsFiltered);
+
         }
 
         //  Filters out courses NOT matching the specified in university id.
@@ -95,17 +102,24 @@ public class CourseServices
                 select course;
         }
 
-        private static IEnumerable<Course> FilterByKeywords(IEnumerable<string> keywords, IEnumerable<Course> courses)
+        private static IEnumerable<Course> FilterByKeywords(IEnumerable<string>? keywords, ref IEnumerable<Course> courses)
         {
+            if (keywords is null)
+                return courses;
+
+            keywords = keywords.Select(keyword => keyword.ToLower().Trim());
             return from course in courses
-                from keyword in keywords.Select(keyword => keyword.ToLower().Trim())
+                from keyword in keywords
                 where course.Name.ToLower().Contains(keyword) || course.Description.ToLower().Contains(keyword) || 
                       course.Components.ToLower().Contains(keyword) || course.Notes.ToLower().Contains(keyword)
                 select course;
         }
 
-        private static IEnumerable<Course> FilterByLectureComponents(IEnumerable<string> lectureComponents, IEnumerable<Course> courses)
+        private static IEnumerable<Course> FilterByLectureComponents(IEnumerable<string>? lectureComponents, ref IEnumerable<Course> courses)
         {
+            if (lectureComponents is null)
+                return courses;
+            
             return from course in courses
                 from lecComponent in lectureComponents.Select(component => component.ToLower().Trim())
                 where course.Components.ToLower().Contains(lecComponent)
@@ -123,11 +137,11 @@ public class CourseServices
         public int? CourseNumber { get; set; }
         public string? CourseName { get; set; }
         public string? Credits { get; set; }
-        public IEnumerable<string> Keywords { get; set; }
-        public IEnumerable<string> LectureComponents { get; set; }
+        public IEnumerable<string>? Keywords { get; set; }
+        public IEnumerable<string>? LectureComponents { get; set; }
 
         public SearchParameters(int? universityId, string? courseType, int? courseNumber, string? courseName,
-            string? credits, IEnumerable<string> keywords, IEnumerable<string> lectureComponents)
+            string? credits, IEnumerable<string>? keywords, IEnumerable<string>? lectureComponents)
         {
             this.UniversityId = universityId;
             this.CourseType = courseType;

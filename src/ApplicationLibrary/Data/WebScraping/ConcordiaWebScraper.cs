@@ -70,8 +70,10 @@ public sealed class ConcordiaWebScraper : WebScraper
 
     public override Course TransformToCourse(string rawString)
     {
-        var course = new Course();
-        course.UniversityId = 1;
+        var course = new Course
+        {
+            UniversityId = 1
+        };
 
         var htmlDoc = new HtmlDocument();
         htmlDoc.LoadHtml(rawString);
