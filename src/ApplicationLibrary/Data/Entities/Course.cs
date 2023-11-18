@@ -1,235 +1,60 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApplicationLibrary.Data.Entities;
 
-/// <summary>
-///     Represents a specific course/class in a university.
-/// </summary>
-/// <remarks>
-///     <para>
-///         This class also serves as an entity class (see <see cref="Microsoft.EntityFrameworkCore.DbContext"/>) when
-///         loading data from the specified database instance.
-///     </para>
-/// </remarks>
-/// <seealso cref="PrerequisiteCourseData"/>
+/// <summary> Represents a specific course/class in a university. </summary>
 [Serializable]
-[Keyless]
-[Table("courses")]
+[Table("Course")]
 public class Course
 {
-    //  Backing fields
-    private string? _description;
-    private string? _components;
-    private string? _instructors;
-    private string? _notes;
-    private string? _termsOffered;
-
-    /// <summary> Id of the university in which the course belongs to. </summary>
-    [Column("university-id")]
+    /// <summary> Internal Id of the course in the database. </summary>
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int CourseId { get; set; }
+    
+    /// <summary> Internal Id of the university that offers the course. Used to link with other entities. </summary>
     public int UniversityId { get; set; }
     
-    [Column("type")]
-    public string Type { get; set; } = "NA";
+    /// <summary> The type of the course. Ex. <c>COMP</c>, <c>ENGR</c> </summary>
+    public string Type { get; set; }
     
-    [Column("number")]
+    /// <summary> The number of the course. Ex. <c>228</c> <c>345</c> </summary>
     public int Number { get; set; }
-    
-    [Column("name")]
-    public string Name { get; set; } = "NA";
-    
-    [Column("credits")]
-    public string Credits { get; set; } = "NA";
-    
-    [Column("description")]
-    public string? Description
-    {
-        get =>          _description ?? "NA"; 
-        set => _description = value;
-    }
+   
+    /// <summary> The name of the course. Ex. <c>System Hardware</c> </summary>
+    public string Name { get; set; }
+   
+    /// <summary> The number of credits offered by the course in string representation. </summary>
+    public string Credits { get; set; }
+   
+    /// <summary> A brief description of the course. </summary>
+    public string? Description { get; set; }
+   
+    /// <summary> The components of the course. Ex. <c>Lecture, Laboratory, ...</c> </summary>
+    public IEnumerable<string>? Components { get; set; }
+   
+    /// <summary> Any other notes about the course. </summary>
+    public IEnumerable<string>? Notes { get; set; } 
+   
+    /// <summary> How many semesters the course is spanned over. </summary>
+    public int Duration { get; set; }
 
-    /// <summary> The corresponding components of the course. ex. Lecture/Lab/Tutorial ... </summary>
-    [Column("components")]
-    public string? Components
-    {
-        get =>          _components ?? "NA";
-        set => _components = value;
-    }
+    public List<string> Prerequisites;
 
-    /// <summary> The main instructor/professor of the course. </summary>
-    [Column("instructors")]
-    public string? Instructors
-    {
-        get =>          _instructors ?? "NA";
-        set => _instructors = value;
-    }
-
-    /// <summary> Any other notable information about the course. </summary>
-    [Column("notes")]
-    public string? Notes
-    {
-        get =>          _notes ?? "NA";
-        set => _notes = value!;
-    }
-
-    /// <summary>
-    ///     The terms where the course can be taken/is offered. A 'null' value indicates it can be taken in any term.
-    /// </summary>
-    [Column("terms-offered")]
-    public string? TermsOffered
-    {
-        get => _termsOffered ?? "NA";
-        set => _termsOffered = value;
-    }
-
-    /// <summary> How many semesters the course is spread over. </summary>
-    [Column("duration")]
-    public int Duration { get; set; } = 1; 
-
-    /// <summary> A list of prerequisite courses in string format. </summary>
-    public List<string> Prerequisites { get; set; } 
-    
     public Course()
     {
+        CourseId = -1;
+        UniversityId = -1;
+        Type = "NA";
+        Number = -1;
+        Name = "NA";
+        Credits = "NA";
+        Description = null;
+        Components = null;
+        Notes = null;
+        Duration = -1;
         Prerequisites = new List<string>();
-    }
-    
-    public Course(int universityId, string type, int number, string name, string credits, string? description,
-        string? components, string? instructors, string? notes, string? termsOffered, int duration,
-        List<string> prerequisites)
-    {
-        UniversityId = universityId;
-        Type = type;
-        Number = number;
-        Name = name;
-        Credits = credits;
-        Description = description;
-        Components = components;
-        Instructors = instructors;
-        Notes = notes;
-        TermsOffered = termsOffered;
-        Duration = duration;
-        Prerequisites = prerequisites;
-    }
-
-    /// <summary> Returns a <see cref="Course.PrerequisiteCourseData"/> corresponding to the course </summary>
-    public PrerequisiteCourseData GetPrerequisiteCourseData()
-    { 
-        return new PrerequisiteCourseData(UniversityId, Type, Number, string.Join("~", Prerequisites));
-    }
-    
-    /// <summary> Initializes the <see cref="Prerequisites"/> attribute. </summary>
-    /// <param name="prerequisitesData">
-    ///     A list of <c>PrerequisiteCourseData</c> objects containing all courses and their prerequisites.
-    /// </param>
-    /// <remarks>
-    ///     This method is meant to be called directly after initializing a <c>Course</c> object, before it can be used
-    ///     in any other statement or in 'client' code.
-    /// </remarks>
-    internal void InitializePrerequisites(IEnumerable<PrerequisiteCourseData> prerequisitesData)
-    {
-        var prerequisites =
-            from prereq in prerequisitesData
-            where prereq.UniversityId == this.UniversityId && prereq.Type == this.Type && prereq.Number == this.Number
-            orderby prereq.UniversityId, prereq.Number
-            select prereq;
-
-        Prerequisites = prerequisites.Select(prereq => prereq.PrerequisitesString).ToList();
-    }
-
-    /// <summary> Returns a string representation of the <code>Course</code> object. </summary>
-    public override string ToString()
-    {
-        return $"{Type}|{Number}|{Name}|{Credits}";
-    }
-
-    public override bool Equals(object? other)
-    {
-        if (other is null || other.GetType() != GetType())
-            return false;
-
-        var otherCourse = (Course) other;
-        return    Type == otherCourse.Type
-               && Number == otherCourse.Number
-               && Name == otherCourse.Name
-               && Credits == otherCourse.Credits;
-    }
-
-    public override int GetHashCode()
-    {
-        var hashCode = new HashCode();
-        hashCode.Add(_description);
-        hashCode.Add(_components);
-        hashCode.Add(_instructors);
-        hashCode.Add(_notes);
-        hashCode.Add(_termsOffered);
-        hashCode.Add(UniversityId);
-        hashCode.Add(Type);
-        hashCode.Add(Number);
-        hashCode.Add(Name);
-        hashCode.Add(Credits);
-        hashCode.Add(Duration);
-        hashCode.Add(Prerequisites);
-        return hashCode.ToHashCode();
-    }
-
-    /// <summary>
-    ///     A helper class that stores data about which course is a prerequisite to another course.
-    /// </summary>
-    /// <remarks>
-    ///     <para>
-    ///         Prerequisite data is stored in another table in the database. As such, another entity class is required
-    ///         when querying data from the database instance.
-    ///     </para>
-    ///     <para>
-    ///         This class is required solely to instantiate the <see cref="Course.Prerequisites"/> attribute in
-    ///         <see cref="Course"/>. As such, it is not meant to be used anywhere else in the assembly and its lifetime
-    ///         is intended to be until the 'full initialization' of <c>Course</c> objects when loaded from the
-    ///         database instance.
-    ///     </para>
-    /// </remarks>
-    [Table("courses-prerequisites")]
-    public sealed class PrerequisiteCourseData
-    {
-        public PrerequisiteCourseData(int universityId, string type, int number, string prerequisitesString)
-        {
-            UniversityId = universityId;
-            Type = type;
-            Number = number;
-            PrerequisitesString = prerequisitesString;
-        }
-
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Column("entry-id")]
-        public int Id { get; set; }
-
-        [Column("university-id")]
-        public int UniversityId { get; internal set; }
-        
-        [Column("type")]
-        public string Type { get; internal set; }
-
-        [Column("number")]
-        public int Number { get; internal set; }
-
-        [Column("prereqs")]
-        public string PrerequisitesString { get; internal set; }
-
-        public override string ToString()
-        {
-            return $"{UniversityId} | {Type} | {Number} | {PrerequisitesString}";
-        }
-
-        /// <summary> Splits the object into two or more <code>PrerequisiteCourseData</code> objects if they have more
-        ///           than one prerequisite. </summary>
-        /// <example> "COMP 248~MATH 203~MATH 204" -> "COMP 248" "MATH 203" "MATH 204" on 3 separate objects. </example>
-        public IEnumerable<PrerequisiteCourseData> SplitPrerequisiteCourseData()
-        {
-            IEnumerable<string> splitPrerequisitesString = PrerequisitesString.Split("~");
-            return splitPrerequisitesString.Select(str => new PrerequisiteCourseData(UniversityId, Type, Number, str));
-        }
     }
 }

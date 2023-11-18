@@ -1,6 +1,7 @@
 ﻿using ApplicationLibrary.Config;
 using ApplicationLibrary.Data.Entities;
 using ApplicationLibrary.Data.Repositories;
+using ApplicationLibrary.Data.Repositories.Database;
 
 namespace ApplicationLibrary.Tests.Data.Repositories;
 

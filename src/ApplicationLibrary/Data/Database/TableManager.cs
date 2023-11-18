@@ -2,19 +2,28 @@
 
 namespace ApplicationLibrary.Data.Database;
 
+
 /// <summary>
-///     A class that can change the contents of the table of a corresponding entity class. 
+///     This class aims to provide an interface to more easily manipulate entries in a table of the given database.
 /// </summary>
-/// <typeparam name="T"> An entity/model class in the database. </typeparam>
 public abstract class TableManager<T> : DbContext
 {
     private readonly string _dbConnectionString;
 
     protected TableManager(string dbConnectionString)
     {
-        this._dbConnectionString = dbConnectionString;
+        _dbConnectionString = dbConnectionString;
     }
 
+    /// <summary> Adds an object to to the specified table. </summary>
+    public abstract void Add(T entry);
+
+    /// <summary> Attempts to remove an entry from the database that matches the passed object. </summary>
+    public abstract bool Remove(T entry);
+
+    /// <summary> Drops all entries in the table. </summary>
+    public abstract void DropAll();
+    
     /// <summary> Replaces all entries in the table with the specified list of new entries. </summary>
     public abstract void ReplaceAllWith(IEnumerable<T> newEntries);
 

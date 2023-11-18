@@ -13,12 +13,20 @@ public class CourseServices
         this._courseRepository = courseRepository;
     }
 
+    /// <summary> Gets <b>all</b> <c>Course</c> objects from the data source. </summary>
+    public IEnumerable<Course> GetAllCourses()
+    {
+        return _courseRepository.GetAll();
+    }
+
+    /// <summary> Gets all <c>Course</c> objects from the data source that matches the search parameters. </summary>
     public IEnumerable<Course> SearchCourses(SearchParameters searchParameters)
     {
         return CourseSearcher.SearchCourses(searchParameters, _courseRepository.GetAll());
     }
 
 
+    //  TODO: Optimize code before declaring project as finsihed
     /// <summary> Helper class providing course search functionality. </summary>
     private static class CourseSearcher {
 
@@ -111,7 +119,8 @@ public class CourseServices
             return from course in courses
                 from keyword in keywords
                 where course.Name.ToLower().Contains(keyword) || course.Description.ToLower().Contains(keyword) || 
-                      course.Components.ToLower().Contains(keyword) || course.Notes.ToLower().Contains(keyword)
+                      course.Components.Any(component => component.ToLower().Contains(keyword)) || 
+                      course.Notes.Any(note => note.ToLower().Contains(keyword))
                 select course;
         }
 
@@ -122,7 +131,7 @@ public class CourseServices
             
             return from course in courses
                 from lecComponent in lectureComponents.Select(component => component.ToLower().Trim())
-                where course.Components.ToLower().Contains(lecComponent)
+                where course.Components.Any(component => component.ToLower().Contains(lecComponent))
                 select course;
         }
     }

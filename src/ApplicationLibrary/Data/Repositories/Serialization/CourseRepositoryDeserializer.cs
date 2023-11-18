@@ -2,7 +2,7 @@
 using ApplicationLibrary.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApplicationLibrary.Data.Repositories;
+namespace ApplicationLibrary.Data.Repositories.Serialization;
 
 /// <summary>
 ///     This class reads a <c>.json</c> file then attempts to de-serialize contents into a <c>IEnumerable&lt;Course&gt;</c>

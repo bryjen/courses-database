@@ -2,6 +2,8 @@ global using NUnit.Framework;
 using ApplicationLibrary.Config;
 using ApplicationLibrary.Data.Entities;
 using ApplicationLibrary.Data.Repositories;
+using ApplicationLibrary.Data.Repositories.Database;
+using ApplicationLibrary.Data.Repositories.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ApplicationLibrary.Tests;
@@ -18,7 +20,7 @@ public static class TestSetup
     {
         ServiceProvider = new ServiceCollection()
             .AddSingleton<IRepository<Course>>(_ => new CourseRepositoryDeserializer(LocalFileSelector.GetSerializedCoursesFileName()!))
-            .AddSingleton<IRepository<University>>(_ => new UniversityRepositoryDatabase(AppSettings.DbConnectionString))
+            .AddSingleton<IRepository<University>>(temp => new UniversityRepositoryDatabase(AppSettings.DbConnectionString))
             .BuildServiceProvider();
     }
 }

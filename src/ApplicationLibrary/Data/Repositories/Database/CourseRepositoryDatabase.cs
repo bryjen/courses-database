@@ -1,7 +1,9 @@
-﻿using ApplicationLibrary.Data.Entities;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Reflection;
+using ApplicationLibrary.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApplicationLibrary.Data.Repositories;
+namespace ApplicationLibrary.Data.Repositories.Database;
 
 public sealed class CourseRepositoryDatabase : DbContext, IRepository<Course>
 {
@@ -10,15 +12,10 @@ public sealed class CourseRepositoryDatabase : DbContext, IRepository<Course>
     private readonly List<Course> _courses;
     
     private DbSet<Course>? Courses { get; set; }
-    private DbSet<Course.PrerequisiteCourseData>? CoursesPrerequisites { get; set; }
 
     public CourseRepositoryDatabase(string dbConnectionString)
     {
         _dbConnectionString = dbConnectionString;
-        
-        _courses = Courses!.ToList();
-        var prerequisites =  CoursesPrerequisites!.ToList();
-        _courses.ForEach(course => course.InitializePrerequisites(prerequisites));
     }
     
     public Course? this[int index]

@@ -4,36 +4,40 @@ using Microsoft.EntityFrameworkCore;
 namespace ApplicationLibrary.Data.Entities;
 
 /// <summary>
-///     Represents a specific university (or maybe even a college).
+///     Represents a specific higher-order educational institution, generally a university, but could be some college.
 /// </summary>
-/// <remarks>
-///     <para>
-///         This class also serves as an entity class (see <see cref="Microsoft.EntityFrameworkCore.DbContext"/>) when
-///         loading data from the specified database instance.
-///     </para>
-/// </remarks>
-[Keyless]
-[Table("universities")]
+[Table("University")]
 public class University
 {
-    [Column("university-id")]
-    public int UniversityId { get; internal set; } = -1;
+    /// <summary> Internal Id of the university in the database. </summary>
+    public int UniversityId { get; internal set; }
     
-    [Column("formal-name")]
-    public string FormalName { get; internal set; } = "NA";
+    /// <summary> The formal name of the university. </summary>
+    public string FormalName { get; internal set; }
     
-    [Column("abbreviation")]
-    public string? Abbreviation { get; internal set; } = null;
+    /// <summary> The common abbreviation or informal name of the university. </summary>
+    public string? Abbreviation { get; internal set; }
     
-    [Column("location")]
-    public string Location { get; internal set; } = "NA";
+    /// <summary> The main physical address of the university. </summary>
+    public string? Address { get; internal set; }
     
-    [Column("type")]
-    public string? Type { get; internal set; } = null;
-    
-    [Column("year-founded")]
-    public int? YearFounded { get; internal set; } = null;
-    
-    [Column("description")]
-    public string? Description { get; internal set; } = null;
+    /// <summary> The type of the university (public, private, etc.). </summary>
+    public string Type { get; internal set; }
+
+    /// <summary> The founding year of the university. </summary>
+    public int YearFounded { get; internal set; }
+
+    /// <summary> A brief description about the university. </summary>
+    public string? Description { get; internal set; }
+
+    public University()
+    {
+        UniversityId = -1;
+        FormalName = "NA";
+        Abbreviation = null;
+        Address = null;
+        Type = "NA";
+        YearFounded = -1;
+        Description = null;
+    }
 }

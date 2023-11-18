@@ -1,9 +1,11 @@
 ﻿using System.Text.RegularExpressions;
 using ApplicationLibrary.Data.Entities;
 using HtmlAgilityPack;
+using Newtonsoft.Json;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace ApplicationLibrary.Data.WebScraping;
 
@@ -223,10 +225,10 @@ public sealed class ConcordiaWebScraper : WebScraper
         //  for the attribute
         course.Components = (node is null) ? 
               null 
-            : Regex.Replace(node.InnerText, @"(?i)component\(s\):?", "").Trim();
+            : Regex.Replace(node.InnerText, @"(?i)component\(s\):?", "").Trim().Split();
 
         //  Data indicating whether or not a course is spanned over two terms is contained HERE, in the 'components'
-        if (course.Components is not null && course.Components.ToLower().Contains("two terms"))
+        if (course.Components is not null && course.Components.Any(component => component.ToLower().Contains("two terms")))
             course.Duration = 2;
     }
 
@@ -252,7 +254,7 @@ public sealed class ConcordiaWebScraper : WebScraper
         var notes = node.SelectNodes("./*")
             .Select(htmlNode => Regex.Replace(htmlNode.InnerText, @"[^a-zA-Z0-9' .,-‑]", "").Trim())
             .ToList();
-        course.Notes = string.Join(";", notes);
+        course.Notes = notes;
     }
 
     //  Initializes the 'Prerequisites attribute'

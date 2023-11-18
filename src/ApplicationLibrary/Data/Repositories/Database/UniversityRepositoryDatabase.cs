@@ -1,9 +1,11 @@
-﻿using ApplicationLibrary.Data.Entities;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Reflection;
+using ApplicationLibrary.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace ApplicationLibrary.Data.Repositories;
+namespace ApplicationLibrary.Data.Repositories.Database;
 
-public class UniversityRepositoryDatabase : DbContext, IRepository<University>
+public class UniversityRepositoryDatabase : DbContext, IRepository<University> 
 {
     private readonly string _dbConnectionString;
     

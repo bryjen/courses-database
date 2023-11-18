@@ -30,11 +30,6 @@ public class ConcordiaWebScraperTests
         List<string> rawData = concordiaWebScraper.ScrapeWebsite(url);
         List<Course> courses = rawData.Select(concordiaWebScraper.TransformToCourse).ToList();
         
-        courses.ForEach(course =>
-        {
-            Console.WriteLine(course.GetPrerequisiteCourseData());
-        });
-
         Assert.Pass();
     }
 }
