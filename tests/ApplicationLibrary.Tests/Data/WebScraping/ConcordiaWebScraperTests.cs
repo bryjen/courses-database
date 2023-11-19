@@ -15,8 +15,14 @@ public class ConcordiaWebScraperTests
         WebScraper concordiaWebScraper = new ConcordiaWebScraper(Filepath);
         List<string> rawData = concordiaWebScraper.ScrapeAll(startIndex, number);
         List<Course> courses = rawData.Select(concordiaWebScraper.TransformToCourse).ToList();
+
+        courses.ForEach(course =>
+        {
+            Console.WriteLine($"{course}\n\t->{course.Description}\n");
+            (course.Components ?? new List<string>()).ToList().ForEach(component => Console.WriteLine($"component: {component}"));
+            (course.Notes ?? new List<string>()).ToList().ForEach(note => Console.WriteLine($"note: {note}"));
+        });
         
-        courses.ForEach(course => Console.WriteLine($"{course}\n\t->{course.Description}\n\t->{course.Components}\n\t->{course.Notes}\n"));
 
         Assert.Pass();
     }

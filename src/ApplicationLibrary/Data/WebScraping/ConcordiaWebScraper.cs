@@ -32,7 +32,7 @@ public sealed class ConcordiaWebScraper : WebScraper
             {
                 accumulationList.AddRange(ScrapeWebsite(url));
             }
-            catch (Exception)
+            catch (Exception exception)
             {
 #if DEBUG       //  Print stacktrace when in Debug mode
                 Console.WriteLine("Exception caught:");
@@ -225,7 +225,9 @@ public sealed class ConcordiaWebScraper : WebScraper
         //  for the attribute
         course.Components = (node is null) ? 
               null 
-            : Regex.Replace(node.InnerText, @"(?i)component\(s\):?", "").Trim().Split();
+            : Regex.Replace(node.InnerText, @"(?i)component\(s\):?", "")
+                  .Split(";")
+                  .Select(str => str.Trim());
 
         //  Data indicating whether or not a course is spanned over two terms is contained HERE, in the 'components'
         if (course.Components is not null && course.Components.Any(component => component.ToLower().Contains("two terms")))
@@ -289,7 +291,7 @@ public sealed class ConcordiaWebScraper : WebScraper
         data = Regex.Replace(data, @";$", "", RegexOptions.IgnoreCase);
 
         //  Split the string, 'filter' all valid course representations
-        course.Prerequisites = data.Split(";")
+        List<string> prereqCoursesAsStrings = data.Split(";")
             .ToList()
             .Select(prereq =>
             {
@@ -297,7 +299,8 @@ public sealed class ConcordiaWebScraper : WebScraper
                 return String.Join("/", matches);
             })
             .ToList();
+        prereqCoursesAsStrings.RemoveAll(string.IsNullOrEmpty);
 
-        course.Prerequisites.RemoveAll(string.IsNullOrEmpty);
+        course.Prerequisites = prereqCoursesAsStrings;
     }
 }

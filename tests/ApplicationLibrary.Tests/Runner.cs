@@ -1,50 +1,35 @@
 ﻿using System.Text.Json;
 using ApplicationLibrary.Config;
 using ApplicationLibrary.Data.Entities;
-using ApplicationLibrary.Data.Repositories;
 using ApplicationLibrary.Data.Repositories.Database;
+using ApplicationLibrary.Data.WebScraping;
 
 namespace ApplicationLibrary.Tests;
 
 public class Runner
 {
-    [Ignore("")]
     [Test]
     public void Run1()
     {
-        IRepository<Course> courseRepo = new CourseRepositoryDatabase(AppSettings.DbConnectionString);
-        IEnumerable<Course> courses = courseRepo.GetAll();
-
-        var options = new JsonSerializerOptions { WriteIndented = true };
+        WebScraper webScraper = new ConcordiaWebScraper("Config/files/concordia_urls.json");
+        var rawCourses = webScraper.ScrapeAll(52, 2);
+        var courses = rawCourses.Select(rawHtml => webScraper.TransformToCourse(rawHtml)).ToList();
+        string rawJson = JsonSerializer.Serialize(courses, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText($"{AppSettings.SolutionDirectory}/repo/courses_2023_11_19.json", rawJson);
         
-        string rawJson = JsonSerializer.Serialize(courses.ToList(), options);
-        string fileName = $"courses_{DateTime.Now.Year}_{DateTime.Now.Month}_{DateTime.Now.Day}";
-        Console.WriteLine(fileName);
+        
+        //string rawJson = File.ReadAllText($"{AppSettings.SolutionDirectory}/repo/courses_2023_11_19.json");
+        //List<Course> courses = JsonSerializer.Deserialize<List<Course>>(rawJson) ?? new List<Course>();
 
-        File.WriteAllText($"{AppSettings.SolutionDirectory}/repo/{fileName}.json", rawJson);
-    }
-    
-    [Test]
-    public void Run2()
-    {
-        var filePath = LocalFileSelector.GetSerializedCoursesFileName();
+        // CourseRepositoryDatabase courseTableManager = new CourseRepositoryDatabase(AppSettings.DbConnectionString);
+        // Console.WriteLine(courseTableManager.ReplaceAllCourses(courses));
 
-        if (filePath is null)
-        {
-            Console.WriteLine("Filepath is null");
-            Assert.Fail();
-            return;
-        }
-
-        var rawJson = File.ReadAllText(filePath);
-        var deserializedData = JsonSerializer.Deserialize<List<Course>>(rawJson);
-
-        if (deserializedData is null)
-            return;
-
-        //var courses = deserializedData.ToList();
-        var courses = new CourseRepositoryDatabase(AppSettings.DbConnectionString).GetAll().ToList();
-        courses.ForEach(course => Console.WriteLine($"{course}\n{course.Description}\n{course.Components}\n{course.Notes}\n{string.Join(", ", course.Prerequisites)}\n"));
+        //  courses.ForEach(course =>
+        //  {
+        //      Console.WriteLine($"{course}\n\t->{course.Description}\n");
+        //      (course.Components ?? new List<string>()).ToList().ForEach(component => Console.WriteLine($"component: {component}"));
+        //      (course.Notes ?? new List<string>()).ToList().ForEach(note => Console.WriteLine($"note: {note}"));
+        //  });
 
     }
 }

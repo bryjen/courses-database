@@ -95,6 +95,9 @@ src/ApplicationLibrary/bin
 src/ApplicationLibrary/obj
 src/ApplicationLibrary/Config/files/appsettings.json
 
+src/DatabaseManager/bin
+src/DatabaseManager/obj
+
 tests/ApplicationLibrary.Tests/bin
 tests/ApplicationLibrary.Tests/obj
 
