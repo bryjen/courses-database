@@ -1,7 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ApplicationLibrary.Data.Entities;
 
@@ -45,7 +48,7 @@ public class Course
     /// <summary> Contains a list of the course prerequisites as strings. </summary>
     /// <remarks> Assume that all listed courses belong to the same university as this course. </remarks>
     [NotMapped]
-    public IEnumerable<string>? Prerequisites { get; set; }
+    public List<string> Prerequisites { get; set; }
     
     [NotMapped]
     [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
@@ -63,7 +66,7 @@ public class Course
         Components = null;
         Notes = null;
         Duration = 1;
-        Prerequisites = null;
+        Prerequisites = new List<string>();
         PrerequisitesAsCourseIds = null;
     }
 
@@ -86,37 +89,32 @@ public class Course
         return hashcode.ToHashCode();
     }
 
-    public IEnumerable<IEnumerable<int>>? GetPrerequisitesAsCourseIds(IEnumerable<Course> courses)
+    /// <summary> Initializes the <c>Prerequisites</c> attribute given data loaded from a database. </summary>
+    /// <remarks> <ul><li>Called when loading data from a database. Since a course and the list of prerequisites are
+    ///                   separated between two tables, those two tables must be passed in.</li></ul> </remarks>
+    public void InitializePrerequisites(
+        IEnumerable<Course> courses, 
+        IEnumerable<CoursePrerequisiteLink> coursePrerequisiteLinks)
     {
-        if (Prerequisites is null)
-            return null;
+        var requiredLinks =
+           (from link in coursePrerequisiteLinks
+            where link.CourseId == this.CourseId
+            select link)
+           .ToList();
 
-        List<List<int>> listOfCourseIds = new List<List<int>>(); 
+        var coursesAsList = courses.ToList();
 
-        courses = courses.ToList();
-        foreach (var prereqAsString in Prerequisites)
+        foreach (var link in requiredLinks)
         {
-            IEnumerable<string> courseSignatures = prereqAsString.Split("/");
-            List<int> courseIds = new List<int>();
+            List<string> courseSignatures = new List<string>();
 
-            Console.WriteLine(prereqAsString);
-            
-            foreach (var tokens in courseSignatures.Select(str => str.Split(" ")))
-            {
-                string courseType = tokens[0];
-                
-                if (!int.TryParse(tokens[1], out int courseNumber))
-                    continue;
+            foreach (var courseId in link.PrereqIds)
+                if (TryGetCourseSignature(courseId, coursesAsList, out string courseSignature))
+                    courseSignatures.Add(courseSignature);
 
-                if (TryGetCourseId(UniversityId, courseType, courseNumber, courses, out int courseId))
-                    courseIds.Add(courseId);
-            }
-            
-            listOfCourseIds.Add(courseIds);
+            Prerequisites.Add(string.Join("/", courseSignatures));
         }
-        
-        return listOfCourseIds;
-    }
+    } 
 
     /// <summary>
     ///     Attempts to get the <c>CourseId</c> from a database/list of <c>Courses</c>. Ensure that the list of <c>Course</c>
@@ -124,11 +122,8 @@ public class Course
     ///     objects as a parameter.
     /// </summary>
     /// <returns> True if a single course matches the parameters, false otherwise. </returns>
-    [SuppressMessage("ReSharper", "InvalidXmlDocComment")]
     public static bool TryGetCourseId(
-        int universityId, 
-        string courseType, 
-        int courseNumber, 
+        int universityId, string courseType, int courseNumber, 
         IEnumerable<Course> courses, 
         out int courseId)
     {
@@ -143,12 +138,111 @@ public class Course
         courseId = selectedCourse.FirstOrDefault();
         return selectedCourse.Count == 1;
     }
+
+    /// <summary>
+    ///     Attempts to get the course signature of a specific course from a database/list of <c>Course</c> objects.
+    ///     Ensure that the list of <c>Course</c> objects have been properly initialized. Preferably read it from the
+    ///     database and then pass the parsed <c>Course</c> objects as parameter.
+    /// </summary>
+    /// <returns> True if a single course matches the parameters, false otherwise. </returns>
+    private static bool TryGetCourseSignature(
+        int courseId,
+        IEnumerable<Course> courses,
+        out string courseSignature)
+    {
+        var selectedCourse =
+            (from course in courses
+                where course.CourseId == courseId
+                select course)
+            .ToList();
+
+        var firstCourse = selectedCourse.FirstOrDefault();
+        courseSignature = (firstCourse is null ? "" : $"{firstCourse.Type} {firstCourse.Number}");
+        return selectedCourse.Count == 1;
+    }
 }
 
-[Keyless]
+
+
+/// <summary> Represents a link between a course, and their prerequisites. </summary>
 [Table("CoursePrerequisite", Schema = "App")]
-internal class CoursePrerequisiteLink
+public class CoursePrerequisiteLink
 {
-   public int CourseId { get; set; }
-   public IEnumerable<int> PrereqIds { get; set; } = new List<int>();
+    /// <summary> Internal Id of the link entry. </summary>
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int LinkId { get; set; }
+    
+    /// <summary> Id of the course the following prerequisite data. </summary>
+    public int CourseId { get; set; }
+    
+    /// <summary> Serialized JSON array of course Ids corresponding to interchangeable course prerequisites. </summary>
+    public IEnumerable<int> PrereqIds { get; set; } = new List<int>();
+    
+    public CoursePrerequisiteLink() 
+    { }
+
+    public CoursePrerequisiteLink(int courseId, IEnumerable<int> prereqIds)
+    {
+        CourseId = courseId;
+        PrereqIds = prereqIds;
+    }
+}
+
+
+
+/// <summary> Class containing generic serializing/de-serializing functions. </summary>
+file static class Serializers
+{
+    private static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions { WriteIndented = true };
+
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    public static Expression<Func<IEnumerable<T>?, string>> IEnumerableSerializer<T>() => 
+        (enumerable => JsonSerializer.Serialize(enumerable ?? Enumerable.Empty<T>(), SerializerOptions));
+    
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    public static Expression<Func<string, IEnumerable<T>?>> IEnumerableDeserializer<T>() =>
+        (rawJson => JsonSerializer.Deserialize<IEnumerable<T>>(rawJson, SerializerOptions) ?? new List<T>());
+}
+
+
+
+/// <summary>
+///     Implements the logic for defining the model for a <c>DbContext</c> class that wishes use the class <c>Course</c>.
+/// </summary>
+internal class CourseEntityTypeConfiguration : IEntityTypeConfiguration<Course>
+{
+    public void Configure(EntityTypeBuilder<Course> builder)
+    {
+        builder
+            .Property(course => course.Components)
+            .HasConversion(
+                Serializers.IEnumerableSerializer<string>(),
+                Serializers.IEnumerableDeserializer<string>());
+        
+        builder
+            .Property(course => course.Notes)
+            .HasConversion(
+                Serializers.IEnumerableSerializer<string>(),
+                Serializers.IEnumerableDeserializer<string>());
+    }
+}
+
+
+
+/// <summary>
+///     Implements the logic for defining a model for a <c>DbContext</c> class that wishes to use the class
+///     <c>CoursePrerequisiteLink</c>.
+/// </summary>
+internal class CoursePrerequisiteLinkTypeConfiguration : IEntityTypeConfiguration<CoursePrerequisiteLink>
+{
+    public void Configure(EntityTypeBuilder<CoursePrerequisiteLink> builder)
+    {
+        //  TODO : Examine effects of warning.
+        builder
+            .Property(link => link.PrereqIds)
+            .HasConversion(
+                Serializers.IEnumerableSerializer<int>()!,
+                Serializers.IEnumerableDeserializer<int>()!);
+    }
 }

@@ -25,8 +25,13 @@ public class CourseRepositoryDatabaseTests
     public void PrintAll()
     {
         IRepository<Course> courseRepo = new CourseRepositoryDatabase(AppSettings.DbConnectionString);
-        courseRepo.GetAll().ToList()
-            .ForEach(course => Console.WriteLine($"{course}\n\t->{course.Description}\n\t->{course.Components}\n\t->{course.Notes}\n"));
+        var courses = courseRepo.GetAll().ToList();
+        foreach (var course in courses)
+        {
+            Console.WriteLine($"{course}\n\t->{course.Description}");
+            Console.WriteLine(string.Join("\n", course.Prerequisites));
+            Console.WriteLine("\n");
+        }
         
         Assert.Pass();
     }

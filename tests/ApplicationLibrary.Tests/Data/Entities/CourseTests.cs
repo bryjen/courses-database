@@ -35,37 +35,4 @@ public class CourseTests
         Assert.That(courseId, Is.EqualTo(expectedCourseId));
     }
     
-    [TestCase(1, "COMP", 228)]
-    [TestCase(1, "COMP", 353)]
-    public void TestGetPrerequisitesAsCourseIds(int universityId, string courseType, int courseNumber)
-    {
-        IRepository<Course> courseSerializer = new CourseRepositoryDeserializer(LocalFileSelector.GetSerializedCoursesFileName() ?? "");
-        IRepository<Course> courseDatabase = new CourseRepositoryDatabase(AppSettings.DbConnectionString);
-        List<Course> coursesSerialized = (List<Course>) courseSerializer.GetAll();
-        List<Course> coursesDatabase = (List<Course>) courseDatabase.GetAll();
-        
-
-        Course? selectedCourse = 
-           (from course in coursesSerialized
-            where course.UniversityId == universityId &&
-                  course.Type == courseType &&
-                  course.Number == courseNumber
-            select course)
-           .FirstOrDefault();
-
-        if (selectedCourse is null)
-        {
-            Assert.Fail("'selectedCourse' is null");
-            return;
-        }
-
-        var prereqIds = selectedCourse.GetPrerequisitesAsCourseIds(coursesDatabase) ?? new List<List<int>>(); 
-        foreach (var prereqIdList in prereqIds.Select(seq => seq.ToList()))
-        {
-            
-            
-            prereqIdList.ForEach(id => Console.Write(id + " "));
-            Console.WriteLine();
-        }
-    }
 }

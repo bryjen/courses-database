@@ -19,7 +19,7 @@ public class CourseGroup
     public string TotalCredits { get; set; } 
     
     /// <summary> Any extra notes about the course group. </summary>
-    public string[]? Notes { get; set; }
+    public IEnumerable<string>? Notes { get; set; }
     
     public CourseGroup()
     {
