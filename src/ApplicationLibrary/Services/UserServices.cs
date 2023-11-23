@@ -84,10 +84,48 @@ public class UserServices
         return foundUser;
     }
 
-    public void UpdateUserPassword(string email, string newPasswordHash,
+    /// <summary>
+    /// Attempts to change the password hash for a given user.
+    /// </summary>
+    /// <param name="email">The email of the user to change the password hash of.</param>
+    /// <param name="newPasswordHash">The new value password hash.</param>
+    /// <param name="logCallback"><c>Serilog</c> function to log information. A <c>null</c> value disables logging.</param>
+    /// <returns>True if password hash change was successful, false otherwise.</returns>
+    public bool UpdateUserPassword(string email, string newPasswordHash,
         LogDelegates.WriteDelegate? logCallback = null)
     {
+        logCallback?.Invoke(LogEventLevel.Information, "Attempting to delete the user \"{email}\"...", email);
+
+        using UsersManager usersManager = new UsersManager(AppSettings.DbConnectionString);
+
+        bool isChangeSuccessful = usersManager.UpdatePassword(email, newPasswordHash, 
+            out string statusMessage,
+            out LogEventLevel messageEventLevel);
         
+        logCallback?.Invoke(messageEventLevel, statusMessage);
+        return isChangeSuccessful;
+    }
+
+    public bool DeleteUser(string email,
+        LogDelegates.WriteDelegate? logCallback = null)
+    {
+        logCallback?.Invoke(LogEventLevel.Information, "Attempting to change the password hash of user \"{email}\"...", email);
+        
+        using UsersManager usersManager = new UsersManager(AppSettings.DbConnectionString);
+
+        bool isDeleteSuccessful = usersManager.TryDeleteUser(email,
+            out User? _,
+            out string statusMessage,
+            out LogEventLevel messageEventLevel);
+
+        logCallback?.Invoke(messageEventLevel, statusMessage);
+        return isDeleteSuccessful;
+    }
+
+    public bool VerifyUser(string email,
+        LogDelegates.WriteDelegate? logCallback = null)
+    {
+        return true;
     }
 }
 
@@ -116,7 +154,9 @@ internal class UsersManager : DbContext
     [SuppressMessage("ReSharper", "InvalidXmlDocComment")]
     public bool TryCreateUser(
         string email, string passwordHash, 
-        out User? newUser, out string statusMessage, out LogEventLevel messageEventLevel)
+        out User? newUser, 
+        out string statusMessage, 
+        out LogEventLevel messageEventLevel)
     {
         //  Create new user object
         newUser = new User
@@ -192,7 +232,10 @@ internal class UsersManager : DbContext
     
     /// <summary> Attempts to update the password hash of a user. </summary>
     /// <returns> True if change was successful, false otherwise. </returns>
-    public bool UpdatePassword(string email, string newPasswordHash)
+    public bool UpdatePassword(
+        string email, string newPasswordHash,
+        out string statusMessage,
+        out LogEventLevel messageEventLevel)
     {
         var users =
            (from user in Users.ToList() 
@@ -201,17 +244,45 @@ internal class UsersManager : DbContext
            .ToList();
 
         if (users.Count != 1)
+        {
+            statusMessage = $"Could not find user with email \"{email}\"";
+            messageEventLevel = LogEventLevel.Information;
             return false;
+        }
 
-        users.First().PasswordHash = newPasswordHash;
-        return true;
+        var updateTransaction = Database.BeginTransaction();
+        try
+        {
+            string oldPasswordHash = users.First().PasswordHash;
+            users.First().PasswordHash = newPasswordHash;
+            SaveChanges();
+            updateTransaction.Commit();
+
+            statusMessage =
+                $"Successfully changed the password hash of user \"{email}\" from \"{oldPasswordHash}\" to \"{newPasswordHash}\"";
+            messageEventLevel = LogEventLevel.Information;
+            return true;
+        }
+        catch
+        {
+           updateTransaction.Rollback();
+           statusMessage = $"An error occurred while trying to change the password hash for the user \"{email}\"";
+           messageEventLevel = LogEventLevel.Error;
+           return false;
+        }
     }
 
     /// <summary> Attempts to delete a user from the database given an email. </summary>
     /// <param name="email"> The email of the user to be deleted. </param>
     /// <param name="deletedUser"> The user that was deleted. Null if no user was deleted. </param>
+    /// <param name="statusMessage"><c>Serilog</c> message template.</param>
+    /// <param name="messageEventLevel"><c>Serilog</c> message level.</param>
     /// <returns> True if deletion was successful, false otherwise. </returns>
-    public bool TryDeleteUser(string email, out User? deletedUser)
+    public bool TryDeleteUser(
+        string email, 
+        out User? deletedUser,
+        out string statusMessage,
+        out LogEventLevel messageEventLevel)
     {
         deletedUser = null;
 
@@ -222,7 +293,11 @@ internal class UsersManager : DbContext
            .ToList();
 
         if (users.Count != 1)
+        {
+            statusMessage = $"Could not find user with email \"{email}\"";
+            messageEventLevel = LogEventLevel.Information;
             return false;
+        }
 
         deletedUser = users.First();
         var deleteTransaction = Database.BeginTransaction();
@@ -231,12 +306,17 @@ internal class UsersManager : DbContext
             Users.Remove(deletedUser);
             SaveChanges();
             deleteTransaction.Commit();
+            
+            statusMessage = $"Successfully deleted the user \"{email}\" from the database.";
+            messageEventLevel = LogEventLevel.Information;
             return true;
         }
         catch
         { 
             deletedUser = null; 
             deleteTransaction.Rollback(); 
+            statusMessage = $"An error occurred while trying to delete the user \"{email}\"";
+            messageEventLevel = LogEventLevel.Error;
             return false;
         }
     }
