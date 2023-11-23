@@ -20,7 +20,8 @@ public class CourseGroupRepositoryDatabase : DbContext, IRepository<CourseGroup>
     }
     
     
-    public CourseGroup? this[int index] => throw new NotImplementedException();
+    public CourseGroup? this[int index] 
+        => (index < 0 || index >= _courseGroups.Count) ? null : _courseGroups[index];
 
     public IEnumerable<CourseGroup> GetAll()
     {

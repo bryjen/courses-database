@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace ApplicationLibrary.Data.Entities;
 
 [Serializable]
-[Table("User", Schema = "Auth")]
+[Table("User", Schema = "App")]
 public class User
 {
     [Newtonsoft.Json.JsonIgnore, System.Text.Json.Serialization.JsonIgnore]
