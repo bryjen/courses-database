@@ -1,8 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using CoursesDatabase.Data.Repositories;
 using CoursesDatabase.Models.Entities;
 
 namespace CoursesDatabase.Services.DomainServices;
 
+/// <summary>
+/// Static class providing search functionality for more advanced search queries.
+/// </summary>
 public static class CourseSearchService
 {
     /// <summary>

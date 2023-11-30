@@ -22,6 +22,26 @@ public class CourseRepository : DbContext
     }
 
     /// <summary>
+    /// Tries to obtain a specific course from the database.
+    /// </summary>
+    public Course? TryGetCourse(int courseUniversityId, string courseType, int courseNumber)
+    {
+        List<CourseEntity> courseEntities = Courses.ToList();
+        List<CoursePrerequisiteEntity> coursePrerequisiteEntities = CoursePrerequisites.ToList();
+        
+        CourseEntity? selectedCourse = courseEntities
+            .FirstOrDefault(course => course.UniversityId == courseUniversityId &&
+                                      course.Type == courseType &&
+                                      course.Number == courseNumber);
+
+        if (selectedCourse is null)
+            return null;
+
+        var courseAsList = new List<CourseEntity> { selectedCourse }; //  We need to wrap into list to use the conversion method
+        return ConvertToModelClasses(courseAsList, courseEntities, coursePrerequisiteEntities).First();
+    }
+
+    /// <summary>
     /// Returns all courses from the database.
     /// </summary>
     /// <remarks>
@@ -31,25 +51,18 @@ public class CourseRepository : DbContext
     {
         List<CourseEntity> courseEntities = Courses.ToList();
         List<CoursePrerequisiteEntity> coursePrerequisiteEntities = CoursePrerequisites.ToList();
-        List<Course> courseModels = new List<Course>();
-        
-        foreach (CourseEntity courseEntity in courseEntities)
-        {
-            IEnumerable<IEnumerable<int>> listOfPrerequisiteIds = coursePrerequisiteEntities
-                .Where(coursePrereq => coursePrereq.CourseId == courseEntity.CourseId)
-                .Select(coursePrereq => coursePrereq.PrereqIds)
-                .ToList();
 
-             List<string> listOfPrerequisiteStrings = listOfPrerequisiteIds
-                .Select(prereqIds => courseEntities.Where(course => prereqIds.Contains(course.CourseId)))
-                .Select(courses => courses.Select(course => $"{course.Type} {course.Number}"))
-                .Select(coursesAsStrings => string.Join("/", coursesAsStrings))
-                .ToList();
-             
-             courseModels.Add(new Course(courseEntity, listOfPrerequisiteStrings));
-        }
+        return ConvertToModelClasses(courseEntities, courseEntities, coursePrerequisiteEntities);
+    }
 
-        return courseModels;
+    /// <summary>
+    /// Returns all courses from the database. <b>Course models returned do NOT have their prerequisites initialized.</b>
+    /// </summary>
+    public IEnumerable<Course> GetAllCoursesUninitialized()
+    {
+        return Courses
+            .Select(courseEntity => new Course(courseEntity, new List<string>()))
+            .ToList();
     }
 
     //  Configures connection
@@ -69,4 +82,34 @@ public class CourseRepository : DbContext
         new CoursePrerequisiteEntityTypeConfiguration()
             .Configure(modelBuilder.Entity<CoursePrerequisiteEntity>());
     }
+
+    //  Takes in a list of course entity classes 'toConvert', then uses the data from 'courseEntities' and
+    // 'coursePrerequisiteEntities' (complete lists of entity classes from DbSet<...> objects) to initialize 
+    //  prerequisites data and conversion into model class.
+    private static IEnumerable<Course> ConvertToModelClasses(List<CourseEntity> toConvert, List<CourseEntity> courseEntities,
+        List<CoursePrerequisiteEntity> coursePrerequisiteEntities)
+    {
+        List<Course> convertedCourses = new List<Course>();
+        
+        foreach (CourseEntity courseEntity in toConvert)
+        {
+            //  List of prerequisite ids.
+            //  A sub-list indicates that the corresponding courses are equivalent and can be substituted for one another.
+            IEnumerable<IEnumerable<int>> listOfPrerequisiteIds = coursePrerequisiteEntities
+                .Where(coursePrereq => coursePrereq.CourseId == courseEntity.CourseId)
+                .Select(coursePrereq => coursePrereq.PrereqIds)
+                .ToList();
+
+            //  The list of prerequisites but the string representation of their corresponding courses.
+            List<string> listOfPrerequisitesAsString = listOfPrerequisiteIds
+                .Select(prereqIds => prereqIds.Select(prereqId => courseEntities.First(course => course.CourseId == prereqId)))
+                .Select(courses => courses.Select(course => $"{course.Type} {course.Number}"))
+                .Select(coursesAsStr => string.Join("/", coursesAsStr))
+                .ToList();
+            
+            convertedCourses.Add(new Course(courseEntity, listOfPrerequisitesAsString));
+        }
+
+        return convertedCourses;
+    } 
 }

@@ -2,13 +2,16 @@
 
 namespace CoursesDatabase.Config;
 
-public class DatabaseSettings
+public static class DatabaseSettings
 {
     public static string DbConnectionString { get; set; }
 
     static DatabaseSettings()
     {
-        string rawJson = File.ReadAllText(@"Config/files/database_settings.json");
+        string filePath = 
+            Environment.GetEnvironmentVariable("COURSES_DATABASE_CONFIG_FILEPATH", EnvironmentVariableTarget.Machine) 
+            ?? "";
+        string rawJson = File.ReadAllText(filePath);
         var deserializedData = JsonSerializer.Deserialize<DatabaseSettingsHelper>(rawJson) ?? new DatabaseSettingsHelper();
 
         DbConnectionString = deserializedData.DbConnectionString;

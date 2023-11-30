@@ -36,7 +36,7 @@ public class Course
         IEnumerable<string>? components, IEnumerable<string>? notes, int duration, IEnumerable<string>? prerequisites)
     {
         UniversityId = universityId;
-        Type = type;
+        Type = type.ToLower();
         Number = number;
         Name = name;
         Credits = credits;
@@ -57,7 +57,7 @@ public class Course
     public Course(CourseEntity courseEntity, IEnumerable<string>? prerequisites)
     {
         UniversityId = courseEntity.UniversityId;
-        Type = courseEntity.Type;
+        Type = courseEntity.Type.ToLower();
         Number = courseEntity.Number;
         Name = courseEntity.Name;
         Credits = courseEntity.Credits;
@@ -72,7 +72,19 @@ public class Course
     /// The course signature serves as a 'pseudo' unique identifier for a course.
     /// </summary>
     public string CourseSignature => $"{UniversityId} {Type} {Number}".ToLower();
-    
+
+    /// <summary>
+    /// Trims out 'less important' data. Greatly reduces the size of list. Remaining data is ideal for 'previewing'
+    /// the details of course.
+    /// </summary>
+    public static IEnumerable<Course> TrimData(IEnumerable<Course> courses)
+    { 
+        return courses
+            .ToList()
+            .Select(course => new Course(course.UniversityId, course.Type, course.Number, course.Name, course.Credits, 
+                null, null, null, course.Duration, null));
+    }
+
 #region ObjectOverrides
 
     public override bool Equals(object? obj)
