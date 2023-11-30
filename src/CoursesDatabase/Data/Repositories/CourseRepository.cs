@@ -31,14 +31,30 @@ public class CourseRepository : DbContext
         
         CourseEntity? selectedCourse = courseEntities
             .FirstOrDefault(course => course.UniversityId == courseUniversityId &&
-                                      course.Type == courseType &&
+                                      course.Type.Equals(courseType, StringComparison.OrdinalIgnoreCase) &&
                                       course.Number == courseNumber);
 
         if (selectedCourse is null)
             return null;
 
-        var courseAsList = new List<CourseEntity> { selectedCourse }; //  We need to wrap into list to use the conversion method
+        List<CourseEntity> courseAsList = new List<CourseEntity> { selectedCourse }; //  We need to wrap into list to use the conversion method
         return ConvertToModelClasses(courseAsList, courseEntities, coursePrerequisiteEntities).First();
+    }
+
+    /// <summary>
+    /// Returns a list of courses that have the specified type.
+    /// </summary>
+    public List<Course> GetCoursesByType(int courseUniversityId, string courseType)
+    {
+        List<CourseEntity> courseEntities = Courses.ToList();
+        List<CoursePrerequisiteEntity> coursePrerequisiteEntities = CoursePrerequisites.ToList();
+
+        List<CourseEntity> selectedCourse = courseEntities
+            .Where(course =>  course.UniversityId == courseUniversityId && 
+                              course.Type.Equals(courseType, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        return (List<Course>) ConvertToModelClasses(selectedCourse, courseEntities, coursePrerequisiteEntities);
     }
 
     /// <summary>

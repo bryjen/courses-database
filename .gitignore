@@ -98,7 +98,8 @@ src/CoursesDatabase/Config/files/
 tests/CoursesDatabase.Tests/bin
 tests/CoursesDatabase.Tests/obj
 
-src/CoursesDatabaseApi/bin
-src/CoursesDatabaseApi/obj
+src/CoursesDatabaseApp/bin
+src/CoursesDatabaseApp/obj
+src/CoursesDatabaseApp/wwwroot/lib
 
 global.json
