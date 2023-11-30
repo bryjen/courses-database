@@ -48,7 +48,7 @@ public class Course
     }
 
     /// <summary>
-    /// Creates a new <c>Course</c> object. Takes a <c>CourseEntity</c> prerequisite class and a list of prerequisites
+    /// Creates a new <c>Course</c> object. Takes a <c>CourseEntity</c> entity class and a list of prerequisites
     /// courses as string representations. 
     /// </summary>
     /// <remarks>
