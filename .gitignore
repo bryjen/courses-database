@@ -91,14 +91,14 @@ ScaffoldingReadMe.txt
 # Project directories/files
 .git/
 
-src/ApplicationLibrary/bin
-src/ApplicationLibrary/obj
-src/ApplicationLibrary/Config/files/appsettings.json
+src/CoursesDatabase/bin
+src/CoursesDatabase/obj
+src/CoursesDatabase/Config/files/
 
-src/DatabaseManager/bin
-src/DatabaseManager/obj
+tests/CoursesDatabase.Tests/bin
+tests/CoursesDatabase.Tests/obj
 
-tests/ApplicationLibrary.Tests/bin
-tests/ApplicationLibrary.Tests/obj
+src/CoursesDatabaseApi/bin
+src/CoursesDatabaseApi/obj
 
 global.json
