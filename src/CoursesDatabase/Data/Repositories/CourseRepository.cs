@@ -18,7 +18,12 @@ public class CourseRepository : DbContext
 
     public CourseRepository()
     {
-        _dbConnectionString = DatabaseSettings.DbConnectionString;
+        this._dbConnectionString = DatabaseSettings.DbConnectionString;
+    }
+
+    public CourseRepository(string dbConnectionString)
+    {
+        this._dbConnectionString = dbConnectionString;
     }
 
     /// <summary>
