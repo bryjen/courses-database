@@ -13,7 +13,7 @@ public static class DatabaseSettings
     {
 #if AZURE_DEPLOY
         //  Code during development
-        string? dbConnectionString = Environment.GetEnvironmentVariable("AZURE_MYSQL_CONNECTIONSTRING", EnvironmentVariableTarget.Machine);
+        string? dbConnectionString = Environment.GetEnvironmentVariable("COURSES_DATABASE_DB_CONNECTION_STRING", EnvironmentVariableTarget.Machine);
         DbConnectionString = dbConnectionString ?? "";
 #else   
         //  Code during development 

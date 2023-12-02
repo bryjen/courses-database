@@ -141,9 +141,10 @@ file static class CourseSearcher
         keywords = keywords.Select(keyword => keyword.ToLower().Trim());
         return from course in courses
             from keyword in keywords
-            where course.Name.ToLower().Contains(keyword) || course!.Description.ToLower().Contains(keyword) || 
-                  course!.Components.Any(component => component.ToLower().Contains(keyword)) || 
-                  course!.Notes.Any(note => note.ToLower().Contains(keyword))
+            where course.Name.ToLower().Contains(keyword) || 
+                  (course.Description is not null && course.Description.ToLower().Contains(keyword)) || 
+                  (course.Components  is not null && course.Components.Any(component => component.ToLower().Contains(keyword))) || 
+                  (course.Notes       is not null && course.Notes.Any(note => note.ToLower().Contains(keyword)))
             select course;
     }
 
@@ -154,7 +155,7 @@ file static class CourseSearcher
             
         return from course in courses
             from lecComponent in lectureComponents.Select(component => component.ToLower().Trim())
-            where course!.Components.Any(component => component.ToLower().Contains(lecComponent))
+            where course.Components is not null && course.Components.Any(component => component.ToLower().Contains(lecComponent))
             select course;
     }
 }

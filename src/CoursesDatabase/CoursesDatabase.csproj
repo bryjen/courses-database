@@ -27,6 +27,7 @@
     <ItemGroup>
       <Folder Include="Services\ApplicationServices\" />
       <Folder Include="Services\DomainServices\CourseSequenceGeneration\Validation\" />
+      <Folder Include="Utilities\" />
     </ItemGroup>
 
 </Project>

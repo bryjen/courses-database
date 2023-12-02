@@ -1,0 +1,2 @@
+﻿[config]
+project = ${{env.DOTNET_ROOT}}/coursesdatabase/src/CoursesDatabaseApp/CoursesDatabaseApp.csproj
