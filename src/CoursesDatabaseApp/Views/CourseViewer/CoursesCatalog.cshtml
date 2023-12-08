@@ -11,12 +11,38 @@
 <body>
 <div class="text-center">
     <h1 class="display-4">Courses Catalog</h1>
+    
+    <button id="load-comp-button">COMP</button>
+    <button id="load-soen-button">SOEN</button>
 </div>
-<div class="text-center">
+
+<script>
+$(document).ready(function() {
+    $("#load-soen-button").click(function() {
+        $.ajax({
+            type: "GET",
+            url: "/CourseViewer/GetCoursesByType?courseType=SOEN",
+            success: function(data) {
+                formatCourses(data);
+            },
+            error: function (error) {
+                console.log("Error: ", error);
+            }
+        });
+    });
+});
+</script>
+
+<div class="text-center" id="info-container">
     @foreach (var course in Model)
     {
         <tr>
-            <td>@course.ToString()</td>
+            <a asp-controller="CourseViewer" asp-action="CourseProfile"
+               asp-route-courseUniversityId=@course.UniversityId
+               asp-route-courseType=@course.Type
+               asp-route-courseNumber=@course.Number>
+                @course.ToString()
+            </a>
             <br>
         </tr>
     }

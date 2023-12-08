@@ -32,4 +32,8 @@
       <ProjectReference Include="..\CoursesDatabase\CoursesDatabase.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <TypeScriptCompile Include="wwwroot\ts\courses.ts" />
+    </ItemGroup>
+
 </Project>

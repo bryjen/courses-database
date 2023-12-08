@@ -1,0 +1,39 @@
+﻿@model CoursesDatabase.Models.Entities.Course 
+
+@{
+    ViewData["Title"] = "Course"; 
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>title</title>
+</head>
+<body>
+
+<div class="text-center" id="info-container">
+    <h1 class="display-4">@Model.ToString()</h1>
+    <p>@Model.Description</p>
+    
+    <!-- Prints out all course  -->
+    <p>
+    @if (Model.Components is not null)
+    {
+        @string.Join(", ", Model.Components);
+    }
+    </p>
+
+
+    <ul>
+    @if (Model.Notes is not null)
+    {
+        @foreach (var note in Model.Notes)
+        {
+            <li>@note</li>
+        }
+    }
+    </ul>
+</div>
+</body>
+</html>

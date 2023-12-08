@@ -102,7 +102,7 @@ public class Course
         return hashCode.ToHashCode();
     }
 
-    public override string ToString() => $"{Type} {Number} {Name} ({Credits} credits)";
+    public override string ToString() => $"{Type.ToUpper()} {Number}\n{Name} ({Credits} credits)";
 
 #endregion
 }
