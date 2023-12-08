@@ -18,6 +18,7 @@ class Course {
     }
 }
 
+//  Loads and formats courses into the info container
 function formatCourses(courses) {
     const container = $('#info-container');
     container.empty();
@@ -29,10 +30,8 @@ function formatCourses(courses) {
             .attr('href', '/CourseViewer/CourseProfile?courseUniversityId=' + asCourse.universityId + '&courseType=' + asCourse.type + '&courseNumber=' + asCourse.number)
             .text(asCourse.toString());
 
-        const tr = $('<tr>')
-            .append(link)
+        const tr = link
             .append('<br>');
         container.append(tr);
     });
 }
-

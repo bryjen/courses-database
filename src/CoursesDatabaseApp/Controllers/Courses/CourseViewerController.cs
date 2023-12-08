@@ -33,7 +33,7 @@ public class CourseViewerController : Controller
                 if (courses.IsNullOrEmpty())
                     return null;
                 
-                _cache.Set("comp_courses", courses, TimeSpan.FromMinutes(10));
+                _cache.Set($"{courseType}_courses", courses, TimeSpan.FromMinutes(10));
             }
 
             return courses;

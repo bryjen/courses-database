@@ -16,6 +16,51 @@
     <button id="load-soen-button">SOEN</button>
 </div>
 
+<input id="my-input" />
+<select id="button-select">
+    <option value="atl">Atlanta</option>
+    <option value="ber">Berlin</option>
+    <option value="chi">Chicago</option>
+    <option value="lon">London</option>
+</select>
+<button id="show-picker">Show picker</button>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    var items = ['Option 1', 'Option 2', 'Option 3']; // Example items
+
+    // Append each item as a span element
+    items.forEach(function(item) {
+        $('#inlineSelectionList').append('<span class="selectable">' + item + '</span> ');
+    });
+
+    // Click event for each item
+    $('.selectable').click(function() {
+        $('.selectable').removeClass('selected'); // Remove 'selected' from all items
+        $(this).addClass('selected'); // Add 'selected' to clicked item
+    });
+});
+</script>
+
+<script>
+$(document).ready(function() {
+    $("#load-comp-button").click(function() {
+        $.ajax({
+            type: "GET",
+            url: "/CourseViewer/GetCoursesByType?courseType=COMP",
+            success: function(data) {
+                formatCourses(data);
+            },
+            error: function (error) {
+                $('#info-container').text(error);
+            }
+        });
+    });
+});
+</script>
+
 <script>
 $(document).ready(function() {
     $("#load-soen-button").click(function() {
@@ -26,7 +71,7 @@ $(document).ready(function() {
                 formatCourses(data);
             },
             error: function (error) {
-                console.log("Error: ", error);
+                $('#info-container').text(error);
             }
         });
     });
@@ -34,18 +79,22 @@ $(document).ready(function() {
 </script>
 
 <div class="text-center" id="info-container">
-    @foreach (var course in Model)
-    {
-        <tr>
-            <a asp-controller="CourseViewer" asp-action="CourseProfile"
-               asp-route-courseUniversityId=@course.UniversityId
-               asp-route-courseType=@course.Type
-               asp-route-courseNumber=@course.Number>
-                @course.ToString()
-            </a>
-            <br>
-        </tr>
-    }
+    <script>
+        function loadCompCourses() {
+            $.ajax({
+                type: "GET",
+                url: "/CourseViewer/GetCoursesByType?courseType=comp",
+                success: function(data) {
+                    formatCourses(data);
+                },
+                error: function (error) {
+                    $('#info-container').text(error);
+                }
+            });
+        }
+        
+        loadCompCourses()
+    </script>
 </div>
 </body>
 </html>
