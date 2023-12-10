@@ -95,11 +95,13 @@ src/CoursesDatabase/bin
 src/CoursesDatabase/obj
 src/CoursesDatabase/Config/files/
 
+src/CoursesDatabase.Api/bin
+src/CoursesDatabase.Api/obj
+
+src/courses-database-frontend
+
 tests/CoursesDatabase.Tests/bin
 tests/CoursesDatabase.Tests/obj
 
-src/CoursesDatabaseApp/bin
-src/CoursesDatabaseApp/obj
-src/CoursesDatabaseApp/wwwroot/lib
 
 global.json
